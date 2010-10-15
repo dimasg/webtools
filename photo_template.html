@@ -78,18 +78,116 @@ function createDocumentFragmentByString(str)
     return range.createContextualFragment(str)
 }
 
+function doMakeTemplateFromYandex(htmldoc,from_idx,to_idx)
+{
+    var result = ""
+
+    var nodes = htmldoc.evaluate('//a[@class="photo"]',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
+    if ( nodes == undefined ) {
+        result = "<Empty page>"
+    } else {
+        result = ""
+        //alert( nodes.snapshotLength + " image(s)" )
+        var re_size=/max-width: (\d+)px; max-height: (\d+)px;/
+        var re_src=/(.*)_[XXSL]{1,4}$/
+        if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
+        for(var idx=from_idx-1, img_idx=1; idx < to_idx; ++idx, ++img_idx ) {
+            var node = nodes.snapshotItem(idx)
+            var img = node.children[0]
+            var url = re_src.exec( img.getAttribute('src') )
+            var size = re_size.exec( img.getAttribute('style') )
+            var next_img = img_idx+". <br/>\n<img src=\""+url[1]+"_orig\" alt=\""+img.getAttribute('alt')+"\" width=\""+size[1]+"\" height=\""+size[2]+"\" /><br/><br/>\n\n"
+            result += next_img
+        }
+    }
+
+    return result
+}
+
+function doMakeTemplateFromGallery1(htmldoc,from_idx,to_idx)
+{
+    var result = ""
+    var nodes = htmldoc.evaluate('//div[@class="vafloat2"]/table/tbody/tr/td[@align="center"]/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
+    if ( nodes == undefined ) {
+        result = "<Empty page>"
+    } else {
+        //alert( nodes.snapshotLength + " image(s)" )
+        if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
+        for(var idx=from_idx-1, img_idx=1; idx < to_idx; ++idx, ++img_idx ) {
+            var link = nodes.snapshotItem(idx)
+            if ( link ) {
+                img = link.children[0]
+            }
+            if ( !link || !img ) {
+                result = "<format parse error!>"
+                return result;
+            } else {
+                result += img.src + "\n"
+            }
+        }
+    }
+
+    return result
+}
+
+function doMakeTemplateFromGallery2(htmldoc,from_idx,to_idx)
+{
+    var result = ""
+    var nodes = htmldoc.evaluate('//td[@class="giItemCell"]/div/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
+    if ( nodes == undefined ) {
+        result = "<Empty page>"
+    } else {
+        alert( nodes.snapshotLength + " image(s)" )
+        if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
+        for(var idx=from_idx-1, img_idx=1; idx < to_idx; ++idx, ++img_idx ) {
+            var link = nodes.snapshotItem(idx)
+            if ( link ) {
+                img = link.children[0]
+            }
+            if ( !link || !img ) {
+                result = "<format parse error!>"
+                return result;
+            } else {
+                result += img.src + "\n"
+            }
+        }
+    }
+
+    return result
+}
+
+function setLabelText(id,text)
+{
+    var elem;
+   
+    if( document.getElementById  && (elem=document.getElementById(id)) )
+    {
+        if( !elem.firstChild )
+           elem.appendChild( document.createTextNode( text ) )
+        else 
+            elem.firstChild.data = text
+
+        return true
+    }
+
+    return false
+}
+
 function doMakeTemplate() 
 {
-
-    document.getElementById('result').value = "";
     var result = "<Unknown error>"
 
     var type = document.getElementById('type_name').value
     var url = document.getElementById('url').value
+
+    document.getElementById('result').value = ""
+    setLabelText("status","обработка тип "+type+" адрес "+url)
+    var status = ""
+
     var from_idx = document.getElementById('from').value
     if ( from_idx == undefined || from_idx == "" ) { from_idx = 1 }
     var to_idx = document.getElementById('to').value
-    if ( type == "ya.fotki" ) {
+    if ( type == "ya.fotki" || "gallery1" || "gallery2" ) {
         var req
         try {
             netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect UniversalBrowserAccess')
@@ -101,40 +199,33 @@ function doMakeTemplate()
         req.open( 'GET', url, false )
         req.send( null )
         if ( req.status != 200 ) {
-            result = result + "status = " + req.status + "(" + req.statusText + ")"
+            setLabelText("status", "ошибка получения альбома " + req.status )
         } else {
             var text = req.responseText
             text = text.replace(/(<[^>]*?)on(?:(?:un)?load|(?:db)?click|mouse(?:down|up|over|out|move)|key(?:press|down|up)|abort|blur|change|error|focus|re(?:size|set)|select|submit)\s*?=\s*?["'][^"']*?["']/ig, "$1")
             text = text.replace(/<\s*?script[^>]*?>[\s\S]*?<\s*?\/script\s*?>/ig, "")
             var htmldoc = createHTMLDocumentByString(text)
-            var nodes = htmldoc.evaluate('//a[@class="photo"]',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
-            if ( nodes == undefined ) {
-                result = "<Empty page>"
+            if ( type == "ya.fotki" ) {
+                result = doMakeTemplateFromYandex(htmldoc,from_idx,to_idx)
+                status = "ok"
+            } else if ( type == "gallery1" ) {
+                result = doMakeTemplateFromGallery1(htmldoc,from_idx,to_idx)
+                status = "ok"
+            } else if ( type == "gallery2" ) {
+                result = doMakeTemplateFromGallery2(htmldoc,from_idx,to_idx)
+                status = "ok"
             } else {
-                result = ""
-                //alert( nodes.snapshotLength + " image(s)" )
-                var re_size=/max-width: (\d+)px; max-height: (\d+)px;/
-                var re_src=/(.*)_[XXSL]{1,4}$/
-                if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
-                for(var idx=from_idx-1, img_idx=1; idx < to_idx; ++idx, ++img_idx ) {
-                    var node = nodes.snapshotItem(idx)
-                    var img = node.children[0]
-                    var url = re_src.exec( img.getAttribute('src') )
-                    var size = re_size.exec( img.getAttribute('style') )
-                    var next_img = img_idx+". <br/>\n<img src=\""+url[1]+"_orig\" alt=\""+img.getAttribute('alt')+"\" width=\""+size[1]+"\" height=\""+size[2]+"\" /><br/><br/>\n\n"
-                    result += next_img
-                }
+                result = "Unknown gallery type:"+type
+                status = "gallery error"
             }
         }
     } else {
-        if ( type == "gallery2" ) {
-            result = "Not yet implemented :("
-        } else {
-            result = "Unknown gallery type:"+type
-        }
+        result = "Unknown gallery type:"+type
+        status = "gallery error"
     }
 
-    document.getElementById('result').value = result;
+    document.getElementById('result').value = result
+    setLabelText("status",status)
 }
 
 </script>
@@ -148,6 +239,7 @@ function doMakeTemplate()
             <div id="form-inputs">
                 <input type="text" id="url" value="" size="128" maxlength="255" /><br/>
                 <input type="radio" name="type" id="type" value="ya.fotki" checked="checked" onClick="document.getElementById('type_name').value='ya.fotki';" /> Яндекс.Фотки
+                <input type="radio" name="type" value="gallery1" onClick="document.getElementById('type_name').value='gallery1';" /> Gallery1 (menalto)
                 <input type="radio" name="type" value="gallery2" onClick="document.getElementById('type_name').value='gallery2';" /> Gallery2 (menalto)
                 <input type="hidden" id="type_name" value="ya.fotki" /><br/>
                 <br/>
@@ -160,6 +252,7 @@ function doMakeTemplate()
     </div>
 
     <div id="output">
+        <label for="status">Статус:&nbsp;&nbsp;</label><label id="status"></label><br/><br/>
         <label for="result">Результат:</label><br/>
         <textarea id="result" cols="100" rows="25" readonly="readonly"></textarea>
     </div>
