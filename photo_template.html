@@ -107,22 +107,22 @@ function doMakeTemplateFromYandex(htmldoc,from_idx,to_idx)
 function doMakeTemplateFromGallery1(htmldoc,from_idx,to_idx)
 {
     var result = ""
-    var nodes = htmldoc.evaluate('//div[@class="vafloat2"]/table/tbody/tr/td[@align="center"]/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
+    var nodes = htmldoc.evaluate('//div[@class="vafloat2"]/table/tbody/tr/td[@align="center"]/a/img',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
     if ( nodes == undefined ) {
         result = "<Empty page>"
     } else {
         //alert( nodes.snapshotLength + " image(s)" )
         if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
         for(var idx=from_idx-1, img_idx=1; idx < to_idx; ++idx, ++img_idx ) {
-            var link = nodes.snapshotItem(idx)
-            if ( link ) {
-                img = link.children[0]
-            }
-            if ( !link || !img ) {
+            var img = nodes.snapshotItem(idx)
+            if ( !img ) {
                 result = "<format parse error!>"
                 return result;
             } else {
-                result += img.src + "\n"
+                var url = img.getAttribute('src').replace('.thumb','')
+                var next_img = img_idx+". <br/>\n<img src=\""+url+"\" alt=\""+img.getAttribute('alt')+"\" /><br/><br/>\n\n"
+                 //+"\" width=\""+""+"\" height=\""+""
+                result += next_img
             }
         }
     }
