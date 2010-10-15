@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+
+<head>
+    <title>Форма генерации шаблона для публикации фотографий</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+<!--
+body {
+    margin:0.5em 0.5em 0.5em 0.5em;
+    padding:0;
+    background:#EFE;
+}
+
+#form {
+    padding: 1em;
+    margin: 1em;
+}
+
+#form-labels {
+    background:#EEF;
+    position:absolute;
+    top:2em;
+    left:2em;
+    padding:0.5em 0.5em 0.5em 0.5em;
+    text-align:right;
+}
+
+#form-inputs {
+    background:#FEE;
+    position:absolute;
+    top:2em;
+    left:13em;
+    right:2em;
+    padding:0.5em 0.5em 0.5em 0.5em;
+}
+
+label {
+    line-height:1.2em;
+}
+
+input {
+    line-height:1.2em;
+}
+
+#output {
+    padding-top: 7em;
+    margin: 1em;
+}
+
+#result {
+}
+
+-->        
+</style>
+</head>
+
+
+<body>
+
+<script language="javascript" type="text/javascript">
+    
+function createHTMLDocumentByString(str) 
+{
+    var html = str.replace(/<!DOCTYPE.*?>/, '').replace(/<html.*?>/, '').replace(/<\/html>.*/, '')
+    var XHTML_NS = 'http://www.w3.org/1999/xhtml';
+    var doctype = document.implementation.createDocumentType('html', '-//W3C//DTD HTML 4.01//EN', 'http://www.w3.org/TR/html4/strict.dtd');
+    var htmlDoc  = document.implementation.createDocument(XHTML_NS, 'html', doctype)
+    var fragment = createDocumentFragmentByString(html)
+    htmlDoc.documentElement.appendChild(htmlDoc.importNode(fragment, true))
+    return htmlDoc
+}
+
+function createDocumentFragmentByString(str) 
+{
+    var range = document.createRange()
+    range.setStartAfter(document.body)
+    return range.createContextualFragment(str)
+}
+
+function doMakeTemplate() 
+{
+
+    document.getElementById('result').value = "";
+    var result = "<Unknown error>"
+
+    var type = document.getElementById('type_name').value
+    var url = document.getElementById('url').value
+    var from_idx = document.getElementById('from').value
+    if ( from_idx == undefined || from_idx == "" ) { from_idx = 1 }
+    var to_idx = document.getElementById('to').value
+    if ( type == "ya.fotki" ) {
+        var req
+        try {
+            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect UniversalBrowserAccess')
+            req = new XMLHttpRequest()
+        }
+        catch (error) {
+            alert("Error initializing XMLHttpRequest 1.\n" + error);
+        }
+        req.open( 'GET', url, false )
+        req.send( null )
+        if ( req.status != 200 ) {
+            result = result + "status = " + req.status + "(" + req.statusText + ")"
+        } else {
+            var text = req.responseText
+            text = text.replace(/(<[^>]*?)on(?:(?:un)?load|(?:db)?click|mouse(?:down|up|over|out|move)|key(?:press|down|up)|abort|blur|change|error|focus|re(?:size|set)|select|submit)\s*?=\s*?["'][^"']*?["']/ig, "$1")
+            text = text.replace(/<\s*?script[^>]*?>[\s\S]*?<\s*?\/script\s*?>/ig, "")
+            var htmldoc = createHTMLDocumentByString(text)
+            var nodes = htmldoc.evaluate('//a[@class="photo"]',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
+            if ( nodes == undefined ) {
+                result = "<Empty page>"
+            } else {
+                result = ""
+                //alert( nodes.snapshotLength + " image(s)" )
+                var re_size=/max-width: (\d+)px; max-height: (\d+)px;/
+                var re_src=/(.*)_[XXSL]{1,4}$/
+                if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
+                for(var idx=from_idx-1, img_idx=1; idx < to_idx; ++idx, ++img_idx ) {
+                    var node = nodes.snapshotItem(idx)
+                    var img = node.children[0]
+                    var url = re_src.exec( img.getAttribute('src') )
+                    var size = re_size.exec( img.getAttribute('style') )
+                    var next_img = img_idx+". <br/>\n<img src=\""+url[1]+"_orig\" alt=\""+img.getAttribute('alt')+"\" width=\""+size[1]+"\" height=\""+size[2]+"\" /><br/><br/>\n\n"
+                    result += next_img
+                }
+            }
+        }
+    } else {
+        if ( type == "gallery2" ) {
+            result = "Not yet implemented :("
+        } else {
+            result = "Unknown gallery type:"+type
+        }
+    }
+
+    document.getElementById('result').value = result;
+}
+
+</script>
+
+    <div id="form">
+        <form action="">
+            <div id="form-labels">
+                <label for="url">Адрес галереи:</label><br/>
+                <label for="type">Тип галереи:</label><br/>
+            </div>
+            <div id="form-inputs">
+                <input type="text" id="url" value="" size="128" maxlength="255" /><br/>
+                <input type="radio" name="type" id="type" value="ya.fotki" checked="checked" onClick="document.getElementById('type_name').value='ya.fotki';" /> Яндекс.Фотки
+                <input type="radio" name="type" value="gallery2" onClick="document.getElementById('type_name').value='gallery2';" /> Gallery2 (menalto)
+                <input type="hidden" id="type_name" value="ya.fotki" /><br/>
+                <br/>
+                <label for="from">С номера:</label><input type="text" id="from" value="1" size="2" maxlength="2" />
+                <label for="to">По номер:</label><input type="text" id="to" value="" size="2" maxlength="2" /><br/>
+                <br/>
+                <input type="button" value="Обработать" onClick="doMakeTemplate(this.form);" />
+            </div>
+        </form>
+    </div>
+
+    <div id="output">
+        <label for="result">Результат:</label><br/>
+        <textarea id="result" cols="100" rows="25" readonly="readonly"></textarea>
+    </div>
+
+</body>
+
+</html>
