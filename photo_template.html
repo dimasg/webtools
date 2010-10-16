@@ -173,7 +173,7 @@ function doMakeTemplateFromGallery1(htmldoc,from_idx,to_idx,n_idx,border,preview
     return preview+result
 }
 
-function doMakeTemplateFromGallery2(htmldoc,from_idx,to_idx,n_idx,border,previews,preview_border)
+function doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,n_idx,border,previews,preview_border)
 {
     var preview = ""
     var result = ""
@@ -183,6 +183,11 @@ function doMakeTemplateFromGallery2(htmldoc,from_idx,to_idx,n_idx,border,preview
         result = "<Empty page>"
     } else {
         //alert( nodes.snapshotLength + " image(s)" )
+        var re_dom_url=/^((?:http:\/\/)?(?:\w+\.)\w+\.\w+)\//i
+        var re_dom_url_res = re_dom_url.exec( url )
+        var root_url = ""
+        if ( re_dom_url_res ) { root_url = re_dom_url_res[1] }
+        var re_src=/^(.*)\.htm[l]?$/i
         if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
         for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
             var link = nodes.snapshotItem(idx)
@@ -194,23 +199,41 @@ function doMakeTemplateFromGallery2(htmldoc,from_idx,to_idx,n_idx,border,preview
                 return result;
             } else {
                 var src = img.getAttribute('src')
+                if ( src[0] == '/' ) { src = root_url+src }
                 var alt = img.getAttribute('alt')
-                var url = src
-                if ( previews != "none" ) {
-                    if ( previews != 'yes' ) {
-                        preview += '<a href="'
-                        if ( previews == 'linkimage' ) { preview += url } else { preview += link.href }
-                        preview +='">'
+                var link_url = link.href
+                if ( link_url[0] == '/' ) { link_url = root_url+link_url }
+                  //
+                req.open( 'GET', link_url, false )
+                req.send( null )
+                if ( req.status != 200 && req.status != 0 ) {
+                    result = "ошибка получения страницы " + link_url
+                    
+                } else {
+                    var linkhtmldoc = createHTMLDocumentByString(req.responseText)
+                    var full_img = linkhtmldoc.evaluate('//div[@id="photo"]/img',linkhtmldoc,null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue
+                    if ( !full_img ) {
+                        result = "ошибка получения адреса полного изображения из страницы " + link_url
+                        return result
+                    } else {
+                        var full_url = full_img.src
+                        if ( full_url[0] == '/' ) { full_url = root_url + full_url }
+                        if ( previews != "none" ) {
+                            if ( previews != 'yes' ) {
+                                preview += '<a href="'
+                                if ( previews == 'linkimage' ) { preview += full_url } else { preview += link_url }
+                                preview +='">'
+                            }
+                            preview += '<img src="'+src+'" alt="'+alt+'" width="'+img.width+'" height="'+img.height+'" border="'+preview_border+'" />'
+                            if ( previews != 'yes' ) {
+                                preview += '</a>'
+                            }
+                            preview += '\n'
+                        }
+                        var next_img = img_idx+'. <br/>\n<img src="'+full_url+'" alt="'+full_img.alt+'" width="'+full_img.width+'" height="'+full_img.height+'" '+border+' /><br/><br/>\n\n'
+                        result += next_img
                     }
-                    preview += '<img src="'+src+'" alt="'+alt+'" width="'+img.width+'" height="'+img.height+'" border="'+preview_border+'" />'
-                    if ( previews != 'yes' ) {
-                        preview += '</a>'
-                    }
-                    preview += '\n'
                 }
-                var next_img = img_idx+'. <br/>\n<img src="'+url+'" alt="'+alt+'" '+border+' /><br/><br/>\n\n'
-                 //+"\" width=\""+""+"\" height=\""+""
-                result += next_img
             }
         }
     }
@@ -292,7 +315,7 @@ function doMakeTemplate()
                 result = doMakeTemplateFromGallery1(htmldoc,from_idx,to_idx,idx,border_str,previews,preview_border)
                 status = "ok"
             } else if ( type == "gallery2" ) {
-                result = doMakeTemplateFromGallery2(htmldoc,from_idx,to_idx,idx,border_str,previews,preview_border)
+                result = doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,idx,border_str,previews,preview_border)
                 status = "ok"
             } else {
                 result = "Unknown gallery type:"+type
