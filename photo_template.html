@@ -44,7 +44,7 @@ input {
 }
 
 #output {
-    padding-top: 7em;
+    padding-top: 12em;
     margin: 1em;
 }
 
@@ -78,8 +78,9 @@ function createDocumentFragmentByString(str)
     return range.createContextualFragment(str)
 }
 
-function doMakeTemplateFromYandex(htmldoc,from_idx,to_idx)
+function doMakeTemplateFromYandex(htmldoc,from_idx,to_idx,n_idx,border,previews,preview_border)
 {
+    var preview = ""
     var result = ""
 
     var nodes = htmldoc.evaluate('//a[@class="photo"]',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
@@ -91,55 +92,7 @@ function doMakeTemplateFromYandex(htmldoc,from_idx,to_idx)
         var re_size=/max-width: (\d+)px; max-height: (\d+)px;/
         var re_src=/(.*)_[XXSL]{1,4}$/
         if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
-        for(var idx=from_idx-1, img_idx=1; idx < to_idx; ++idx, ++img_idx ) {
-            var node = nodes.snapshotItem(idx)
-            var img = node.children[0]
-            var url = re_src.exec( img.getAttribute('src') )
-            var size = re_size.exec( img.getAttribute('style') )
-            var next_img = img_idx+". <br/>\n<img src=\""+url[1]+"_orig\" alt=\""+img.getAttribute('alt')+"\" width=\""+size[1]+"\" height=\""+size[2]+"\" /><br/><br/>\n\n"
-            result += next_img
-        }
-    }
-
-    return result
-}
-
-function doMakeTemplateFromGallery1(htmldoc,from_idx,to_idx)
-{
-    var result = ""
-    var nodes = htmldoc.evaluate('//div[@class="vafloat2"]/table/tbody/tr/td[@align="center"]/a/img',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
-    if ( nodes == undefined ) {
-        result = "<Empty page>"
-    } else {
-        //alert( nodes.snapshotLength + " image(s)" )
-        if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
-        for(var idx=from_idx-1, img_idx=1; idx < to_idx; ++idx, ++img_idx ) {
-            var img = nodes.snapshotItem(idx)
-            if ( !img ) {
-                result = "<format parse error!>"
-                return result;
-            } else {
-                var url = img.getAttribute('src').replace('.thumb','')
-                var next_img = img_idx+". <br/>\n<img src=\""+url+"\" alt=\""+img.getAttribute('alt')+"\" /><br/><br/>\n\n"
-                 //+"\" width=\""+""+"\" height=\""+""
-                result += next_img
-            }
-        }
-    }
-
-    return result
-}
-
-function doMakeTemplateFromGallery2(htmldoc,from_idx,to_idx)
-{
-    var result = ""
-    var nodes = htmldoc.evaluate('//td[@class="giItemCell"]/div/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
-    if ( nodes == undefined ) {
-        result = "<Empty page>"
-    } else {
-        alert( nodes.snapshotLength + " image(s)" )
-        if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
-        for(var idx=from_idx-1, img_idx=1; idx < to_idx; ++idx, ++img_idx ) {
+        for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
             var link = nodes.snapshotItem(idx)
             if ( link ) {
                 img = link.children[0]
@@ -148,12 +101,122 @@ function doMakeTemplateFromGallery2(htmldoc,from_idx,to_idx)
                 result = "<format parse error!>"
                 return result;
             } else {
-                result += img.src + "\n"
+                var src = img.getAttribute('src')
+                var alt = img.getAttribute('alt')
+                var url = re_src.exec( src )
+                if ( previews != "none" ) {
+                    if ( previews != 'yes' ) {
+                        preview += '<a href="'
+                        if ( previews == 'linkimage' ) { preview += url } else { preview += link.href }
+                        preview +='">'
+                    }
+                    preview += '<img src="'+src+'" alt="'+alt+'" width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+' border="'+preview_border+'" />\n'
+                    if ( previews != 'yes' ) {
+                        preview += '</a>'
+                    }
+                    preview += '\n'
+                }
+                var size = re_size.exec( img.getAttribute('style') )
+                var next_img = img_idx+'. <br/>\n<img src="'+url[1]+'_orig" alt="'+img.getAttribute('alt')+'" width="'+size[1]+'" height="'+size[2]+'" '+border+' /><br/><br/>\n\n'
+                result += next_img
             }
         }
     }
+    if ( preview != "" ) { preview += "\n\n" }
 
-    return result
+    return preview+result
+}
+
+function doMakeTemplateFromGallery1(htmldoc,from_idx,to_idx,n_idx,border,previews,preview_border)
+{
+    var preview = ""
+    var result = ""
+
+    var nodes = htmldoc.evaluate('//div[@class="vafloat2"]/table/tbody/tr/td[@align="center"]/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
+    if ( nodes == undefined ) {
+        result = "<Empty page>"
+    } else {
+        //alert( nodes.snapshotLength + " image(s)" )
+        if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
+        for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
+            var link = nodes.snapshotItem(idx)
+            if ( link ) {
+                img = link.children[0]
+            }
+            if ( !link || !img ) {
+                result = "<format parse error!>"
+                return result;
+            } else {
+                var src = img.getAttribute('src')
+                var alt = img.getAttribute('alt')
+                var url = src.replace('.thumb','')
+                if ( previews != 'none' ) {
+                    if ( previews != 'yes' ) {
+                        preview += '<a href="'
+                        if ( previews == 'linkimage' ) { preview += url } else { preview += link.href }
+                        preview +='">'
+                    }
+                    preview += '<img src="'+src+'" alt="'+alt+'" width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+'" border="'+preview_border+'" />'
+                    if ( previews != 'yes' ) {
+                        preview += '</a>'
+                    }
+                    preview += '\n'
+                }
+                var next_img = img_idx+'. <br/>\n<img src="'+url+'" alt="'+alt+'" '+border+' /><br/><br/>\n\n'
+                 //+"\" width=\""+""+"\" height=\""+""
+                result += next_img
+            }
+        }
+    }
+    if ( preview != "" ) { preview += "\n\n" }
+
+    return preview+result
+}
+
+function doMakeTemplateFromGallery2(htmldoc,from_idx,to_idx,n_idx,border,previews,preview_border)
+{
+    var preview = ""
+    var result = ""
+
+    var nodes = htmldoc.evaluate('//td[@class="giItemCell"]/div/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
+    if ( nodes == undefined ) {
+        result = "<Empty page>"
+    } else {
+        //alert( nodes.snapshotLength + " image(s)" )
+        if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
+        for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
+            var link = nodes.snapshotItem(idx)
+            if ( link ) {
+                img = link.children[0]
+            }
+            if ( !link || !img ) {
+                result = "<format parse error!>"
+                return result;
+            } else {
+                var src = img.getAttribute('src')
+                var alt = img.getAttribute('alt')
+                var url = src
+                if ( previews != "none" ) {
+                    if ( previews != 'yes' ) {
+                        preview += '<a href="'
+                        if ( previews == 'linkimage' ) { preview += url } else { preview += link.href }
+                        preview +='">'
+                    }
+                    preview += '<img src="'+src+'" alt="'+alt+'" width="'+img.width+'" height="'+img.height+'" border="'+preview_border+'" />'
+                    if ( previews != 'yes' ) {
+                        preview += '</a>'
+                    }
+                    preview += '\n'
+                }
+                var next_img = img_idx+'. <br/>\n<img src="'+url+'" alt="'+alt+'" '+border+' /><br/><br/>\n\n'
+                 //+"\" width=\""+""+"\" height=\""+""
+                result += next_img
+            }
+        }
+    }
+    if ( preview != "" ) { preview += "\n\n" }
+
+    return preview+result
 }
 
 function setLabelText(id,text)
@@ -187,6 +250,23 @@ function doMakeTemplate()
     var from_idx = document.getElementById('from').value
     if ( from_idx == undefined || from_idx == "" ) { from_idx = 1 }
     var to_idx = document.getElementById('to').value
+    var idx = document.getElementById('idx').value
+    if ( idx == undefined || idx == "" ) { idx = 1 }
+    var border = document.getElementById('border').value
+    if ( border == undefined || border == "" ) { border = 0 }
+    var v_space = document.getElementById('v_space').value
+    if ( v_space == undefined ) { v_space = "" }
+    var h_space = document.getElementById('h_space').value
+    if ( h_space == undefined ) { h_space = "" }
+    var previews = document.getElementById('previews').value
+    if ( previews == undefined || previews == "" ) { previews = "none" }
+    var preview_border = document.getElementById('preview_border').value
+    if ( preview_border == undefined || preview_border == "" ) { preview_border = 0 }
+      //
+    border_str = 'border="'+border+'"';
+    if ( v_space != "" ) { border_str+=' vspace="'+v_space+'"' }
+    if ( h_space != "" ) { border_str+=' hspace="'+h_space+'"' }
+      //
     if ( type == "ya.fotki" || "gallery1" || "gallery2" ) {
         var req
         try {
@@ -198,21 +278,21 @@ function doMakeTemplate()
         }
         req.open( 'GET', url, false )
         req.send( null )
-        if ( req.status != 200 ) {
-            setLabelText("status", "ошибка получения альбома " + req.status )
+        if ( req.status != 200 && req.status != 0 ) {
+            status = "ошибка получения альбома " + req.status
         } else {
             var text = req.responseText
             text = text.replace(/(<[^>]*?)on(?:(?:un)?load|(?:db)?click|mouse(?:down|up|over|out|move)|key(?:press|down|up)|abort|blur|change|error|focus|re(?:size|set)|select|submit)\s*?=\s*?["'][^"']*?["']/ig, "$1")
             text = text.replace(/<\s*?script[^>]*?>[\s\S]*?<\s*?\/script\s*?>/ig, "")
             var htmldoc = createHTMLDocumentByString(text)
             if ( type == "ya.fotki" ) {
-                result = doMakeTemplateFromYandex(htmldoc,from_idx,to_idx)
+                result = doMakeTemplateFromYandex(htmldoc,from_idx,to_idx,idx,border_str,previews,preview_border)
                 status = "ok"
             } else if ( type == "gallery1" ) {
-                result = doMakeTemplateFromGallery1(htmldoc,from_idx,to_idx)
+                result = doMakeTemplateFromGallery1(htmldoc,from_idx,to_idx,idx,border_str,previews,preview_border)
                 status = "ok"
             } else if ( type == "gallery2" ) {
-                result = doMakeTemplateFromGallery2(htmldoc,from_idx,to_idx)
+                result = doMakeTemplateFromGallery2(htmldoc,from_idx,to_idx,idx,border_str,previews,preview_border)
                 status = "ok"
             } else {
                 result = "Unknown gallery type:"+type
@@ -233,8 +313,8 @@ function doMakeTemplate()
     <div id="form">
         <form action="">
             <div id="form-labels">
-                <label for="url">Адрес галереи:</label><br/>
-                <label for="type">Тип галереи:</label><br/>
+                <label for="url">Адрес галереи:&nbsp;</label><br/>
+                <label for="type">Тип галереи:&nbsp;</label><br/>
             </div>
             <div id="form-inputs">
                 <input type="text" id="url" value="" size="128" maxlength="255" /><br/>
@@ -243,8 +323,22 @@ function doMakeTemplate()
                 <input type="radio" name="type" value="gallery2" onClick="document.getElementById('type_name').value='gallery2';" /> Gallery2 (menalto)
                 <input type="hidden" id="type_name" value="ya.fotki" /><br/>
                 <br/>
-                <label for="from">С номера:</label><input type="text" id="from" value="1" size="2" maxlength="2" />
-                <label for="to">По номер:</label><input type="text" id="to" value="" size="2" maxlength="2" /><br/>
+                <label for="from">С номера:&nbsp;</label><input type="text" id="from" value="1" size="2" maxlength="2" />
+                <label for="to">По номер:&nbsp;</label><input type="text" id="to" value="" size="2" maxlength="2" />
+                <label for="idx">Нумеровать c:&nbsp;</label><input type="text" id="idx" value="" size="2" maxlength="2" /><br/><br/>
+                <label for="border">Граница:&nbsp;</label><input type="text" id="border" value="0" size="1" maxlength="1" />
+                <label for="v_space">VSpace:&nbsp;</label><input type="text" id="v_space" value="" size="2" maxlength="2" />
+                <label for="h_space">HSpace:&nbsp;</label><input type="text" id="h_space" value="" size="2" maxlength="2" />
+                <br/>
+                <br/>
+                <label for="previews">Миниатюры:&nbsp;</label>
+                <select id="previews" />
+                    <option value="none">Нет</option>
+                    <option value="yes">Да</option>
+                    <option value="linkimage">Со ссылкой на полную</option>
+                    <option value="linkpage">Со ссылкой на страницу</option>
+                </select>
+                <label for="preview_border">Граница:&nbsp;</label><input type="text" id="preview_border" value="0" size="1" maxlength="1" /><br/>
                 <br/>
                 <input type="button" value="Обработать" onClick="doMakeTemplate(this.form);" />
             </div>
