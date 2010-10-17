@@ -78,7 +78,7 @@ function createDocumentFragmentByString(str)
     return range.createContextualFragment(str)
 }
 
-function doMakeTemplateFromYandex(htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,alt_on,alt_desc)
+function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,alt_on,alt_desc)
 {
     var preview = ""
     var result = ""
@@ -104,11 +104,19 @@ function doMakeTemplateFromYandex(htmldoc,from_idx,to_idx,n_idx,border,nl_tag,pr
                 var src = img.getAttribute('src')
                 var alt = ""
                 if ( alt_on ) { alt = ' alt="'+img.alt+'"' }
-                var url = re_src.exec( src )
+                var src_url = re_src.exec( src )
+                var link_url = link.href
+                if ( link_url[0] == '/' ) { 
+                    var re_dom_url=/^((?:http:\/\/)?(?:[\w\-]+\.)[\w\-]+\.[\w\-]+)\//i
+                    var re_dom_url_res = re_dom_url.exec( url )
+                    var root_url = ""
+                    if ( re_dom_url_res ) { root_url = re_dom_url_res[1] }
+                    link_url = root_url+link_url 
+                }
                 if ( previews != "none" ) {
                     if ( previews != 'yes' ) {
                         preview += '<a href="'
-                        if ( previews == 'linkimage' ) { preview += url } else { preview += link.href }
+                        if ( previews == 'linkimage' ) { preview += src_url[1]+'_orig' } else { preview += link_url }
                         preview +='">'
                     }
                     preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+' border="'+preview_border+'" >\n'
@@ -121,7 +129,7 @@ function doMakeTemplateFromYandex(htmldoc,from_idx,to_idx,n_idx,border,nl_tag,pr
                 var desc = ''
                 if ( alt_desc ) { desc = img.alt }
                 var size = re_size.exec( img.getAttribute('style') )
-                var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+url[1]+'_orig"'+alt+' width="'+size[1]+'" height="'+size[2]+'" '+border+' >'+nl_tag+nl_tag+'\n\n'
+                var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+src_url[1]+'_orig"'+alt+' width="'+size[1]+'" height="'+size[2]+'" '+border+' >'+nl_tag+nl_tag+'\n\n'
                 result += next_img
             }
         }
@@ -339,7 +347,7 @@ function doMakeTemplate()
             text = text.replace(/<\s*?script[^>]*?>[\s\S]*?<\s*?\/script\s*?>/ig, "")
             var htmldoc = createHTMLDocumentByString(text)
             if ( type == "ya.fotki" ) {
-                result = doMakeTemplateFromYandex(htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,alt_on,alt_desc)
+                result = doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,alt_on,alt_desc)
                 status = "ok"
             } else if ( type == "gallery1" ) {
                 result = doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,alt_on,alt_desc)
@@ -358,16 +366,73 @@ function doMakeTemplate()
     }
 
     document.getElementById('result').value = result
-    if ( result[0] != '<' && status == 'ok' ) { doSaveSettings() }
+    doSaveSettings()
     setLabelText("status",status)
+}
+
+function setCookie(name,value)
+{
+    document.cookie = name + '=' + escape(value)
+}
+
+function getCookie(name)
+{
+    var value = null
+
+    var cookies = document.cookie
+    if ( cookies.length > 0 ) {
+        var idx = cookies.indexOf(name+'=')
+        if ( idx != -1 ) {
+            idx += name.length+1
+            eidx = cookies.indexOf(';',idx)
+            if ( eidx == -1 ) { eidx = cookies.length }
+            value = unescape(cookies.substring(idx,eidx))
+        }
+    }
+
+    return value
+}
+
+function setSelectValue(selector,value)
+{
+    for( idx = 0; idx < selector.length; ++idx ) {
+        if ( selector[idx].value == value ) {
+            selector.selectedIndex = idx
+        }
+    }
 }
 
 function doLoadSettings()
 {
+    var c_val
+    c_val = getCookie('border');
+    if ( c_val != null ) { document.getElementById('border').value = c_val }
+    c_val = getCookie('v_space');
+    if ( c_val != null ) { document.getElementById('v_space').value = c_val }
+    c_val = getCookie('h_space');
+    if ( c_val != null ) { document.getElementById('h_space').value = c_val }
+    c_val = getCookie('nl_tag');
+    if ( c_val != null ) { setSelectValue( document.getElementById('nl_tag'), c_val ) }
+    c_val = getCookie('previews');
+    if ( c_val != null ) { setSelectValue( document.getElementById('previews'), c_val ) }
+    c_val = getCookie('preview_border');
+    if ( c_val != null ) { document.getElementById('preview_border').value = c_val }
+    c_val = getCookie('alt_on');
+    if ( c_val != null ) document.getElementById('alt_on').checked = c_val
+    c_val = getCookie('alt_desc');
+    if ( c_val != null ) document.getElementById('alt_desc').checked = c_val
 }
 
 function doSaveSettings()
 {
+    setCookie( 'border', document.getElementById('border').value )
+    setCookie( 'v_space', document.getElementById('v_space').value )
+    setCookie( 'h_space', document.getElementById('h_space').value )
+    setCookie( 'nl_tag', document.getElementById('nl_tag').value )
+    setCookie( 'previews', document.getElementById('previews').value )
+    setCookie( 'preview_border', document.getElementById('preview_border').value )
+    setCookie( 'alt_on', document.getElementById('alt_on').checked )
+    setCookie( 'alt_desc', document.getElementById('alt_desc').checked )
 }
 
 </script>
