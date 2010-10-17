@@ -78,7 +78,7 @@ function createDocumentFragmentByString(str)
     return range.createContextualFragment(str)
 }
 
-function doMakeTemplateFromYandex(htmldoc,from_idx,to_idx,n_idx,border,previews,preview_border,alt_desc)
+function doMakeTemplateFromYandex(htmldoc,from_idx,to_idx,n_idx,border,previews,preview_border,alt_on,alt_desc)
 {
     var preview = ""
     var result = ""
@@ -102,7 +102,8 @@ function doMakeTemplateFromYandex(htmldoc,from_idx,to_idx,n_idx,border,previews,
                 return result;
             } else {
                 var src = img.getAttribute('src')
-                var alt = img.getAttribute('alt')
+                var alt = ""
+                if ( alt_on ) { alt = ' alt="'+img.getAttribute('alt')+'"' }
                 var url = re_src.exec( src )
                 if ( previews != "none" ) {
                     if ( previews != 'yes' ) {
@@ -110,7 +111,7 @@ function doMakeTemplateFromYandex(htmldoc,from_idx,to_idx,n_idx,border,previews,
                         if ( previews == 'linkimage' ) { preview += url } else { preview += link.href }
                         preview +='">'
                     }
-                    preview += '<img src="'+src+'" alt="'+alt+'" width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+' border="'+preview_border+'" />\n'
+                    preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+' border="'+preview_border+'" />\n'
                     if ( previews != 'yes' ) {
                         preview += '</a>'
                     }
@@ -120,7 +121,7 @@ function doMakeTemplateFromYandex(htmldoc,from_idx,to_idx,n_idx,border,previews,
                 var desc = ''
                 if ( alt_desc ) { desc = alt }
                 var size = re_size.exec( img.getAttribute('style') )
-                var next_img = img_idx+'. '+desc+'<br/>\n<img src="'+url[1]+'_orig" alt="'+alt+'" width="'+size[1]+'" height="'+size[2]+'" '+border+' /><br/><br/>\n\n'
+                var next_img = img_idx+'. '+desc+'<br/>\n<img src="'+url[1]+'_orig"'+alt+' width="'+size[1]+'" height="'+size[2]+'" '+border+' /><br/><br/>\n\n'
                 result += next_img
             }
         }
@@ -130,7 +131,7 @@ function doMakeTemplateFromYandex(htmldoc,from_idx,to_idx,n_idx,border,previews,
     return preview+result
 }
 
-function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,previews,preview_border,alt_desc)
+function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,previews,preview_border,alt_on,alt_desc)
 {
     var preview = ""
     var result = ""
@@ -151,7 +152,7 @@ function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,pre
                 return result;
             } else {
                 var src = img.getAttribute('src')
-                var alt = img.getAttribute('alt')
+                var alt = ""
                 var link_url = link.href+'?full=1'
                   //
                 req.open( 'GET', link_url, false )
@@ -166,13 +167,14 @@ function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,pre
                         return result
                     } else {
                         var full_src = full_img.src
+                        if ( alt_on ) { alt = ' alt="'+img.getAttribute('alt')+'"' }
                         if ( previews != 'none' ) {
                             if ( previews != 'yes' ) {
                                 preview += '<a href="'
                                 if ( previews == 'linkimage' ) { preview += full_src } else { preview += link.href }
                                 preview +='">'
                             }
-                            preview += '<img src="'+src+'" alt="'+alt+'" width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+'" border="'+preview_border+'" />'
+                            preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+'" border="'+preview_border+'" />'
                             if ( previews != 'yes' ) {
                                 preview += '</a>'
                             }
@@ -180,9 +182,9 @@ function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,pre
                         }
                           //
                         var desc = ''
+                        if ( alt_on ) { alt = ' alt="'+full_img.alt+'"' }
                         if ( alt_desc ) { desc = full_img.alt }
-                        var next_img = img_idx+'. '+desc+'<br/>\n<img src="'+full_src+'" alt="'+full_img.alt+'" width="'+full_img.width+'" height="'+full_img.height+'" '+border+' /><br/><br/>\n\n'
-                         //+"\" width=\""+""+"\" height=\""+""
+                        var next_img = img_idx+'. '+desc+'<br/>\n<img src="'+full_src+'"'+alt+' width="'+full_img.width+'" height="'+full_img.height+'" '+border+' /><br/><br/>\n\n'
                         result += next_img
                     }
                 }
@@ -194,7 +196,7 @@ function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,pre
     return preview+result
 }
 
-function doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,n_idx,border,previews,preview_border,alt_desc)
+function doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,n_idx,border,previews,preview_border,alt_on,alt_desc)
 {
     var preview = ""
     var result = ""
@@ -221,7 +223,7 @@ function doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,n_idx,border
             } else {
                 var src = img.getAttribute('src')
                 if ( src[0] == '/' ) { src = root_url+src }
-                var alt = img.getAttribute('alt')
+                var alt = ""
                 var link_url = link.href
                 if ( link_url[0] == '/' ) { link_url = root_url+link_url }
                   //
@@ -238,21 +240,23 @@ function doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,n_idx,border
                     } else {
                         var full_src = full_img.src
                         if ( full_src[0] == '/' ) { full_src = root_url + full_src }
+                        if ( alt_on ) { alt = ' alt="'+img.alt+'"' }
                         if ( previews != "none" ) {
                             if ( previews != 'yes' ) {
                                 preview += '<a href="'
                                 if ( previews == 'linkimage' ) { preview += full_src } else { preview += link_url }
                                 preview +='">'
                             }
-                            preview += '<img src="'+src+'" alt="'+alt+'" width="'+img.width+'" height="'+img.height+'" border="'+preview_border+'" />'
+                            preview += '<img src="'+src+'"'+alt+' width="'+img.width+'" height="'+img.height+'" border="'+preview_border+'" />'
                             if ( previews != 'yes' ) {
                                 preview += '</a>'
                             }
                             preview += '\n'
                         }
                         var desc = ''
+                        if ( alt_on ) { alt = ' alt="'+full_img.alt+'"' }
                         if ( alt_desc ) { desc = full_img.alt }
-                        var next_img = img_idx+'. '+desc+'<br/>\n<img src="'+full_src+'" alt="'+full_img.alt+'" width="'+full_img.width+'" height="'+full_img.height+'" '+border+' /><br/><br/>\n\n'
+                        var next_img = img_idx+'. '+desc+'<br/>\n<img src="'+full_src+'"'+alt+' width="'+full_img.width+'" height="'+full_img.height+'" '+border+' /><br/><br/>\n\n'
                         result += next_img
                     }
                 }
@@ -289,7 +293,7 @@ function doMakeTemplate()
     var url = document.getElementById('url').value
 
     document.getElementById('result').value = ""
-    setLabelText("status","обработка тип "+type+" адрес "+url)
+    setLabelText("status","обработка ...")
     var status = ""
 
     var from_idx = document.getElementById('from').value
@@ -307,6 +311,7 @@ function doMakeTemplate()
     if ( previews == undefined || previews == "" ) { previews = "none" }
     var preview_border = document.getElementById('preview_border').value
     if ( preview_border == undefined || preview_border == "" ) { preview_border = 0 }
+    var alt_on = document.getElementById('alt_on').checked
     var alt_desc = document.getElementById('alt_desc').checked
       //
     border_str = 'border="'+border+'"';
@@ -332,13 +337,13 @@ function doMakeTemplate()
             text = text.replace(/<\s*?script[^>]*?>[\s\S]*?<\s*?\/script\s*?>/ig, "")
             var htmldoc = createHTMLDocumentByString(text)
             if ( type == "ya.fotki" ) {
-                result = doMakeTemplateFromYandex(htmldoc,from_idx,to_idx,idx,border_str,previews,preview_border,alt_desc)
+                result = doMakeTemplateFromYandex(htmldoc,from_idx,to_idx,idx,border_str,previews,preview_border,alt_on,alt_desc)
                 status = "ok"
             } else if ( type == "gallery1" ) {
-                result = doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,idx,border_str,previews,preview_border,alt_desc)
+                result = doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,idx,border_str,previews,preview_border,alt_on,alt_desc)
                 status = "ok"
             } else if ( type == "gallery2" ) {
-                result = doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,idx,border_str,previews,preview_border,alt_desc)
+                result = doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,idx,border_str,previews,preview_border,alt_on,alt_desc)
                 status = "ok"
             } else {
                 result = "Unknown gallery type:"+type
@@ -372,11 +377,12 @@ function doMakeTemplate()
                 <label for="from">С номера:&nbsp;</label><input type="text" id="from" value="1" size="2" maxlength="2" />
                 <label for="to">По номер:&nbsp;</label><input type="text" id="to" value="" size="2" maxlength="2" />
                 <label for="idx">Нумеровать c:&nbsp;</label><input type="text" id="idx" value="" size="2" maxlength="2" />
-                <label for="alt_desc">Добавить alt в описание:&nbsp;</label><input type="checkbox" id="alt_desc" checked="" />
+                <label for="alt_on">Добавить alt:&nbsp;</label><input type="checkbox" id="alt_on" />
+                <label for="alt_desc">Добавить alt в описание:&nbsp;</label><input type="checkbox" id="alt_desc" />
                 <br/><br/>
                 <label for="border">Граница:&nbsp;</label><input type="text" id="border" value="0" size="1" maxlength="1" />
-                <label for="v_space">VSpace:&nbsp;</label><input type="text" id="v_space" value="" size="2" maxlength="2" />
-                <label for="h_space">HSpace:&nbsp;</label><input type="text" id="h_space" value="" size="2" maxlength="2" />
+                <label for="v_space">VSpace:&nbsp;</label><input type="text" id="v_space" value="1" size="2" maxlength="2" />
+                <label for="h_space">HSpace:&nbsp;</label><input type="text" id="h_space" value="5" size="2" maxlength="2" />
                 <br/><br/>
                 <label for="previews">Миниатюры:&nbsp;</label>
                 <select id="previews" />
