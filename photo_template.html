@@ -125,7 +125,7 @@ function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_ta
                         if ( previews == 'linkimage' ) { preview += src_url } else { preview += link_url }
                         preview +='">'
                     }
-                    preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+' border="'+preview_border+'" >\n'
+                    preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+' border="'+preview_border+'">\n'
                     if ( previews != 'yes' ) {
                         preview += '</a>'
                     }
@@ -134,7 +134,7 @@ function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_ta
                   //
                 var desc = ''
                 if ( alt_desc ) { desc = img.alt }
-                var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+src_url+'"'+alt+' width="'+size[1]+'" height="'+size[2]+'" '+border+' >'+nl_tag+nl_tag+'\n\n'
+                var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+src_url+'"'+alt+' width="'+size[1]+'" height="'+size[2]+'" '+border+'>'+nl_tag+nl_tag+'\n\n'
                 result += next_img
             }
         }
@@ -187,7 +187,7 @@ function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,nl_
                                 if ( previews == 'linkimage' ) { preview += full_src } else { preview += link.href }
                                 preview +='">'
                             }
-                            preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+'" border="'+preview_border+'" >'
+                            preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+'" border="'+preview_border+'">'
                             if ( previews != 'yes' ) {
                                 preview += '</a>'
                             }
@@ -197,7 +197,7 @@ function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,nl_
                         var desc = ''
                         if ( alt_on ) { alt = ' alt="'+full_img.alt+'"' }
                         if ( alt_desc ) { desc = full_img.alt }
-                        var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+full_src+'"'+alt+' width="'+full_img.width+'" height="'+full_img.height+'" '+border+' >'+nl_tag+nl_tag+'\n\n'
+                        var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+full_src+'"'+alt+' width="'+full_img.width+'" height="'+full_img.height+'" '+border+'>'+nl_tag+nl_tag+'\n\n'
                         result += next_img
                     }
                 }
@@ -260,7 +260,7 @@ function doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,n_idx,border
                                 if ( previews == 'linkimage' ) { preview += full_src } else { preview += link_url }
                                 preview +='">'
                             }
-                            preview += '<img src="'+src+'"'+alt+' width="'+img.width+'" height="'+img.height+'" border="'+preview_border+'" >'
+                            preview += '<img src="'+src+'"'+alt+' width="'+img.width+'" height="'+img.height+'" border="'+preview_border+'">'
                             if ( previews != 'yes' ) {
                                 preview += '</a>'
                             }
@@ -269,7 +269,7 @@ function doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,n_idx,border
                         var desc = ''
                         if ( alt_on ) { alt = ' alt="'+full_img.alt+'"' }
                         if ( alt_desc ) { desc = full_img.alt }
-                        var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+full_src+'"'+alt+' width="'+full_img.width+'" height="'+full_img.height+'" '+border+' >'+nl_tag+nl_tag+'\n\n'
+                        var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+full_src+'"'+alt+' width="'+full_img.width+'" height="'+full_img.height+'" '+border+'>'+nl_tag+nl_tag+'\n\n'
                         result += next_img
                     }
                 }
