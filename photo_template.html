@@ -104,7 +104,6 @@ function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_ta
                 var src = img.getAttribute('src')
                 var alt = ""
                 if ( alt_on ) { alt = ' alt="'+img.alt+'"' }
-                var src_url = re_src.exec( src )
                 var link_url = link.href
                 if ( link_url[0] == '/' ) { 
                     var re_dom_url=/^((?:http:\/\/)?(?:[\w\-]+\.)[\w\-]+\.[\w\-]+)\//i
@@ -113,10 +112,17 @@ function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_ta
                     if ( re_dom_url_res ) { root_url = re_dom_url_res[1] }
                     link_url = root_url+link_url 
                 }
+                var size = re_size.exec( img.getAttribute('style') )
+                var src_url = re_src.exec( src )[1]
+                if ( (size[1] == 800 && size[2] == 600)||(size[1] == 600 && size[2] == 800) ) {
+                    src_url += '_XL'
+                } else {
+                    src_url += '_orig'
+                }
                 if ( previews != "none" ) {
                     if ( previews != 'yes' ) {
                         preview += '<a href="'
-                        if ( previews == 'linkimage' ) { preview += src_url[1]+'_orig' } else { preview += link_url }
+                        if ( previews == 'linkimage' ) { preview += src_url } else { preview += link_url }
                         preview +='">'
                     }
                     preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+' border="'+preview_border+'" >\n'
@@ -128,8 +134,7 @@ function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_ta
                   //
                 var desc = ''
                 if ( alt_desc ) { desc = img.alt }
-                var size = re_size.exec( img.getAttribute('style') )
-                var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+src_url[1]+'_orig"'+alt+' width="'+size[1]+'" height="'+size[2]+'" '+border+' >'+nl_tag+nl_tag+'\n\n'
+                var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+src_url+'"'+alt+' width="'+size[1]+'" height="'+size[2]+'" '+border+' >'+nl_tag+nl_tag+'\n\n'
                 result += next_img
             }
         }
