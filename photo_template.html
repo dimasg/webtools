@@ -59,385 +59,385 @@ input {
 <body onload="doLoadSettings()">
 
 <script language="javascript" type="text/javascript">
-    
-function createHTMLDocumentByString(str) 
-{
-    var html = str.replace(/<!DOCTYPE.*?>/, '').replace(/<html.*?>/, '').replace(/<\/html>.*/, '')
-    var XHTML_NS = 'http://www.w3.org/1999/xhtml';
-    var doctype = document.implementation.createDocumentType('html', '-//W3C//DTD HTML 4.01//EN', 'http://www.w3.org/TR/html4/strict.dtd');
-    var htmlDoc  = document.implementation.createDocument(XHTML_NS, 'html', doctype)
-    var fragment = createDocumentFragmentByString(html)
-    htmlDoc.documentElement.appendChild(htmlDoc.importNode(fragment, true))
-    return htmlDoc
-}
-
-function createDocumentFragmentByString(str) 
-{
-    var range = document.createRange()
-    range.setStartAfter(document.body)
-    return range.createContextualFragment(str)
-}
-
-function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,alt_on,alt_desc)
-{
-    var preview = ""
-    var result = ""
-
-    var nodes = htmldoc.evaluate('//a[@class="photo"]',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
-    if ( nodes == undefined ) {
-        result = "<Empty page>"
-    } else {
-        result = ""
-        //alert( nodes.snapshotLength + " image(s)" )
-        var re_size=/max-width: (\d+)px; max-height: (\d+)px;/
-        var re_src=/(.*)_[XXSL]{1,4}$/
-        if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
-        for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
-            var link = nodes.snapshotItem(idx)
-            if ( link ) {
-                img = link.children[0]
-            }
-            if ( !link || !img ) {
-                result = "<format parse error!>"
-                return result;
-            } else {
-                var src = img.getAttribute('src')
-                var alt = ""
-                if ( alt_on ) { alt = ' alt="'+img.alt+'"' }
-                var link_url = link.href
-                if ( link_url[0] == '/' ) { 
-                    var re_dom_url=/^((?:http:\/\/)?(?:[\w\-]+\.)[\w\-]+\.[\w\-]+)\//i
-                    var re_dom_url_res = re_dom_url.exec( url )
-                    var root_url = ""
-                    if ( re_dom_url_res ) { root_url = re_dom_url_res[1] }
-                    link_url = root_url+link_url 
-                }
-                var size = re_size.exec( img.getAttribute('style') )
-                var src_url = re_src.exec( src )[1]
-                if ( (size[1] == 800 && size[2] == 600)||(size[1] == 600 && size[2] == 800) ) {
-                    src_url += '_XL'
-                } else {
-                    src_url += '_orig'
-                }
-                if ( previews != "none" ) {
-                    if ( previews != 'yes' ) {
-                        preview += '<a href="'
-                        if ( previews == 'linkimage' ) { preview += src_url } else { preview += link_url }
-                        preview +='">'
-                    }
-                    preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+' border="'+preview_border+'">\n'
-                    if ( previews != 'yes' ) {
-                        preview += '</a>'
-                    }
-                    preview += '\n'
-                }
-                  //
-                var desc = ''
-                if ( alt_desc ) { desc = img.alt }
-                var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+src_url+'"'+alt+' width="'+size[1]+'" height="'+size[2]+'" '+border+'>'+nl_tag+nl_tag+'\n\n'
-                result += next_img
-            }
-        }
-    }
-    if ( preview != "" ) { preview += "\n\n" }
-
-    return preview+result
-}
-
-function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,alt_on,alt_desc)
-{
-    var preview = ""
-    var result = ""
-
-    var nodes = htmldoc.evaluate('//div[@class="vafloat2"]/table/tbody/tr/td[@align="center"]/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
-    if ( nodes == undefined ) {
-        result = "<Empty page>"
-    } else {
-        //alert( nodes.snapshotLength + " image(s)" )
-        if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
-        for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
-            var link = nodes.snapshotItem(idx)
-            if ( link ) {
-                img = link.children[0]
-            }
-            if ( !link || !img ) {
-                result = "<format parse error!>"
-                return result;
-            } else {
-                var src = img.getAttribute('src')
-                var alt = ""
-                var link_url = link.href+'?full=1'
-                  //
-                req.open( 'GET', link_url, false )
-                req.send( null )
-                if ( req.status != 200 && req.status != 0 ) {
-                    result = "ошибка получения страницы " + link_url
-                } else {
-                    var linkhtmldoc = createHTMLDocumentByString(req.responseText)
-                    var full_img = linkhtmldoc.evaluate('//table/tbody/tr/td[@align="center"]/a/img',linkhtmldoc,null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue
-                    if ( !full_img ) {
-                        result = "ошибка получения адреса полного изображения из страницы " + link_url
-                        return result
-                    } else {
-                        var full_src = full_img.src
-                        if ( alt_on ) { alt = ' alt="'+img.getAttribute('alt')+'"' }
-                        if ( previews != 'none' ) {
-                            if ( previews != 'yes' ) {
-                                preview += '<a href="'
-                                if ( previews == 'linkimage' ) { preview += full_src } else { preview += link.href }
-                                preview +='">'
-                            }
-                            preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+'" border="'+preview_border+'">'
-                            if ( previews != 'yes' ) {
-                                preview += '</a>'
-                            }
-                            preview += '\n'
-                        }
-                          //
-                        var desc = ''
-                        if ( alt_on ) { alt = ' alt="'+full_img.alt+'"' }
-                        if ( alt_desc ) { desc = full_img.alt }
-                        var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+full_src+'"'+alt+' width="'+full_img.width+'" height="'+full_img.height+'" '+border+'>'+nl_tag+nl_tag+'\n\n'
-                        result += next_img
-                    }
-                }
-            }
-        }
-    }
-    if ( preview != "" ) { preview += "\n\n" }
-
-    return preview+result
-}
-
-function doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,alt_on,alt_desc)
-{
-    var preview = ""
-    var result = ""
-
-    var nodes = htmldoc.evaluate('//td[@class="giItemCell"]/div/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
-    if ( nodes == undefined ) {
-        result = "<Empty page>"
-    } else {
-        //alert( nodes.snapshotLength + " image(s)" )
-        var re_dom_url=/^((?:http:\/\/)?(?:\w+\.)\w+\.\w+)\//i
-        var re_dom_url_res = re_dom_url.exec( url )
-        var root_url = ""
-        if ( re_dom_url_res ) { root_url = re_dom_url_res[1] }
-        var re_src=/^(.*)\.htm[l]?$/i
-        if ( to_idx == undefined || to_idx== "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength }
-        for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
-            var link = nodes.snapshotItem(idx)
-            if ( link ) {
-                img = link.children[0]
-            }
-            if ( !link || !img ) {
-                result = "<format parse error!>"
-                return result;
-            } else {
-                var src = img.getAttribute('src')
-                if ( src[0] == '/' ) { src = root_url+src }
-                var alt = ""
-                var link_url = link.href
-                if ( link_url[0] == '/' ) { link_url = root_url+link_url }
-                  //
-                req.open( 'GET', link_url, false )
-                req.send( null )
-                if ( req.status != 200 && req.status != 0 ) {
-                    result = "ошибка получения страницы " + link_url
-                } else {
-                    var linkhtmldoc = createHTMLDocumentByString(req.responseText)
-                    var full_img = linkhtmldoc.evaluate('//div[@id="photo"]/img',linkhtmldoc,null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue
-                    if ( !full_img ) {
-                        result = "ошибка получения адреса полного изображения из страницы " + link_url
-                        return result
-                    } else {
-                        var full_src = full_img.src
-                        if ( full_src[0] == '/' ) { full_src = root_url + full_src }
-                        if ( alt_on ) { alt = ' alt="'+img.alt+'"' }
-                        if ( previews != "none" ) {
-                            if ( previews != 'yes' ) {
-                                preview += '<a href="'
-                                if ( previews == 'linkimage' ) { preview += full_src } else { preview += link_url }
-                                preview +='">'
-                            }
-                            preview += '<img src="'+src+'"'+alt+' width="'+img.width+'" height="'+img.height+'" border="'+preview_border+'">'
-                            if ( previews != 'yes' ) {
-                                preview += '</a>'
-                            }
-                            preview += '\n'
-                        }
-                        var desc = ''
-                        if ( alt_on ) { alt = ' alt="'+full_img.alt+'"' }
-                        if ( alt_desc ) { desc = full_img.alt }
-                        var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+full_src+'"'+alt+' width="'+full_img.width+'" height="'+full_img.height+'" '+border+'>'+nl_tag+nl_tag+'\n\n'
-                        result += next_img
-                    }
-                }
-            }
-        }
-    }
-    if ( preview != "" ) { preview += "\n\n" }
-
-    return preview+result
-}
-
-function setLabelText(id,text)
-{
-    var elem;
-   
-    if( document.getElementById  && (elem=document.getElementById(id)) )
-    {
-        if( !elem.firstChild )
-           elem.appendChild( document.createTextNode( text ) )
-        else 
-            elem.firstChild.data = text
-
-        return true
-    }
-
-    return false
-}
-
-function doMakeTemplate() 
-{
-    var result = "<Unknown error>"
-
-    var type = document.getElementById('type_name').value
-    var url = document.getElementById('url').value
-
-    document.getElementById('result').value = ""
-    setLabelText("status","обработка ...")
-    var status = ""
-
-    var from_idx = document.getElementById('from').value
-    if ( from_idx == undefined || from_idx == "" ) { from_idx = 1 }
-    var to_idx = document.getElementById('to').value
-    var idx = document.getElementById('idx').value
-    if ( idx == undefined || idx == "" ) { idx = 1 }
-    var border = document.getElementById('border').value
-    if ( border == undefined || border == "" ) { border = 0 }
-    var v_space = document.getElementById('v_space').value
-    if ( v_space == undefined ) { v_space = "" }
-    var h_space = document.getElementById('h_space').value
-    if ( h_space == undefined ) { h_space = "" }
-    var nl_tag = document.getElementById('nl_tag').value
-    if ( nl_tag == 'none' ) { nl_tag = '' } else { nl_tag = '<'+nl_tag+'/>' }
-    var previews = document.getElementById('previews').value
-    if ( previews == undefined || previews == "" ) { previews = "none" }
-    var preview_border = document.getElementById('preview_border').value
-    if ( preview_border == undefined || preview_border == "" ) { preview_border = 0 }
-    var alt_on = document.getElementById('alt_on').checked
-    var alt_desc = document.getElementById('alt_desc').checked
-      //
-    border_str = 'border="'+border+'"';
-    if ( v_space != "" ) { border_str+=' vspace="'+v_space+'"' }
-    if ( h_space != "" ) { border_str+=' hspace="'+h_space+'"' }
-      //
-    if ( type == "ya.fotki" || "gallery1" || "gallery2" ) {
-        var req
-        try {
-            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect UniversalBrowserAccess')
-            req = new XMLHttpRequest()
-        }
-        catch (error) {
-            alert("Error initializing XMLHttpRequest 1.\n" + error);
-        }
-        req.open( 'GET', url, false )
-        req.send( null )
-        if ( req.status != 200 && req.status != 0 ) {
-            status = "ошибка получения альбома " + req.status
-        } else {
-            var text = req.responseText
-            text = text.replace(/(<[^>]*?)on(?:(?:un)?load|(?:db)?click|mouse(?:down|up|over|out|move)|key(?:press|down|up)|abort|blur|change|error|focus|re(?:size|set)|select|submit)\s*?=\s*?["'][^"']*?["']/ig, "$1")
-            text = text.replace(/<\s*?script[^>]*?>[\s\S]*?<\s*?\/script\s*?>/ig, "")
-            var htmldoc = createHTMLDocumentByString(text)
-            if ( type == "ya.fotki" ) {
-                result = doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,alt_on,alt_desc)
-                status = "ok"
-            } else if ( type == "gallery1" ) {
-                result = doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,alt_on,alt_desc)
-                status = "ok"
-            } else if ( type == "gallery2" ) {
-                result = doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,alt_on,alt_desc)
-                status = "ok"
-            } else {
-                result = "Unknown gallery type:"+type
-                status = "gallery error"
-            }
-        }
-    } else {
-        result = "Unknown gallery type:"+type
-        status = "gallery error"
-    }
-
-    document.getElementById('result').value = result
-    doSaveSettings()
-    setLabelText("status",status)
-}
 
 function setCookie(name,value)
 {
-    document.cookie = name + '=' + escape(value)
+    document.cookie = name + '=' + escape(value);
 }
 
 function getCookie(name)
 {
-    var value = null
+    var value = null;
 
-    var cookies = document.cookie
+    var cookies = document.cookie;
     if ( cookies.length > 0 ) {
-        var idx = cookies.indexOf(name+'=')
+        var idx = cookies.indexOf(name+'=');
         if ( idx != -1 ) {
-            idx += name.length+1
-            eidx = cookies.indexOf(';',idx)
-            if ( eidx == -1 ) { eidx = cookies.length }
-            value = unescape(cookies.substring(idx,eidx))
+            idx += name.length+1;
+            eidx = cookies.indexOf(';',idx);
+            if ( eidx == -1 ) { eidx = cookies.length; }
+            value = unescape(cookies.substring(idx,eidx));
         }
     }
 
-    return value
+    return value;
 }
 
 function setSelectValue(selector,value)
 {
     for( idx = 0; idx < selector.length; ++idx ) {
         if ( selector[idx].value == value ) {
-            selector.selectedIndex = idx
+            selector.selectedIndex = idx;
         }
     }
 }
 
 function doLoadSettings()
 {
-    var c_val
+    var c_val;
     c_val = getCookie('border');
-    if ( c_val != null ) { document.getElementById('border').value = c_val }
+    if ( c_val !== null ) { document.getElementById('border').value = c_val; }
     c_val = getCookie('v_space');
-    if ( c_val != null ) { document.getElementById('v_space').value = c_val }
+    if ( c_val !== null ) { document.getElementById('v_space').value = c_val; }
     c_val = getCookie('h_space');
-    if ( c_val != null ) { document.getElementById('h_space').value = c_val }
+    if ( c_val !== null ) { document.getElementById('h_space').value = c_val; }
     c_val = getCookie('nl_tag');
-    if ( c_val != null ) { setSelectValue( document.getElementById('nl_tag'), c_val ) }
+    if ( c_val !== null ) { setSelectValue( document.getElementById('nl_tag'), c_val ); }
     c_val = getCookie('previews');
-    if ( c_val != null ) { setSelectValue( document.getElementById('previews'), c_val ) }
+    if ( c_val !== null ) { setSelectValue( document.getElementById('previews'), c_val ); }
     c_val = getCookie('preview_border');
-    if ( c_val != null ) { document.getElementById('preview_border').value = c_val }
+    if ( c_val !== null ) { document.getElementById('preview_border').value = c_val; }
     c_val = getCookie('alt_on');
-    if ( c_val != null ) document.getElementById('alt_on').checked = c_val
+    if ( c_val !== null ) { document.getElementById('alt_on').checked = c_val; }
     c_val = getCookie('alt_desc');
-    if ( c_val != null ) document.getElementById('alt_desc').checked = c_val
+    if ( c_val !== null ) { document.getElementById('alt_desc').checked = c_val; }
 }
 
 function doSaveSettings()
 {
-    setCookie( 'border', document.getElementById('border').value )
-    setCookie( 'v_space', document.getElementById('v_space').value )
-    setCookie( 'h_space', document.getElementById('h_space').value )
-    setCookie( 'nl_tag', document.getElementById('nl_tag').value )
-    setCookie( 'previews', document.getElementById('previews').value )
-    setCookie( 'preview_border', document.getElementById('preview_border').value )
-    setCookie( 'alt_on', document.getElementById('alt_on').checked )
-    setCookie( 'alt_desc', document.getElementById('alt_desc').checked )
+    setCookie( 'border', document.getElementById('border').value );
+    setCookie( 'v_space', document.getElementById('v_space').value );
+    setCookie( 'h_space', document.getElementById('h_space').value );
+    setCookie( 'nl_tag', document.getElementById('nl_tag').value );
+    setCookie( 'previews', document.getElementById('previews').value );
+    setCookie( 'preview_border', document.getElementById('preview_border').value );
+    setCookie( 'alt_on', document.getElementById('alt_on').checked );
+    setCookie( 'alt_desc', document.getElementById('alt_desc').checked );
+}
+
+function createDocumentFragmentByString(str) 
+{
+    var range = document.createRange();
+    range.setStartAfter(document.body);
+    return range.createContextualFragment(str);
+}
+
+function createHTMLDocumentByString(str) 
+{
+    var html = str.replace(/<!DOCTYPE.*?>/, '').replace(/<html.*?>/, '').replace(/<\/html>.*/, '');
+    var XHTML_NS = 'http://www.w3.org/1999/xhtml';
+    var doctype = document.implementation.createDocumentType('html', '-//W3C//DTD HTML 4.01//EN', 'http://www.w3.org/TR/html4/strict.dtd');
+    var htmlDoc  = document.implementation.createDocument(XHTML_NS, 'html', doctype);
+    var fragment = createDocumentFragmentByString(html);
+    htmlDoc.documentElement.appendChild(htmlDoc.importNode(fragment, true));
+    return htmlDoc;
+}
+
+function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,alt_on,alt_desc)
+{
+    var preview = "";
+    var result = "";
+
+    var nodes = htmldoc.evaluate('//a[@class="photo"]',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null);
+    if ( nodes === undefined ) {
+        result = "<Empty page>";
+    } else {
+        result = "";
+        //alert( nodes.snapshotLength + " image(s)" );
+        var re_size=/max-width: (\d+)px; max-height: (\d+)px;/;
+        var re_src=/(.*)_[XXSL]{1,4}$/;
+        if ( to_idx === undefined || to_idx === "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength; }
+        for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
+            var link = nodes.snapshotItem(idx);
+            if ( link ) {
+                img = link.children[0];
+            }
+            if ( !link || !img ) {
+                result = "<format parse error!>";
+                return result;
+            } else {
+                var src = img.getAttribute('src');
+                var alt = "";
+                if ( alt_on ) { alt = ' alt="'+img.alt+'"'; }
+                var link_url = link.href;
+                if ( link_url[0] == '/' ) {
+                    var re_dom_url=/^((?:http:\/\/)?(?:[\w\-]+\.)[\w\-]+\.[\w\-]+)\//i;
+                    var re_dom_url_res = re_dom_url.exec( url );
+                    var root_url = "";
+                    if ( re_dom_url_res ) { root_url = re_dom_url_res[1]; }
+                    link_url = root_url+link_url;
+                }
+                var size = re_size.exec( img.getAttribute('style') );
+                var src_url = re_src.exec( src )[1];
+                if ( (size[1] == 800 && size[2] == 600)||(size[1] == 600 && size[2] == 800) ) {
+                    src_url += '_XL';
+                } else {
+                    src_url += '_orig';
+                }
+                if ( previews != "none" ) {
+                    if ( previews != 'yes' ) {
+                        preview += '<a href="';
+                        if ( previews == 'linkimage' ) { preview += src_url; } else { preview += link_url; }
+                        preview +='">';
+                    }
+                    preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+' border="'+preview_border+'">\n';
+                    if ( previews != 'yes' ) {
+                        preview += '</a>';
+                    }
+                    preview += '\n';
+                }
+                  //
+                var desc = '';
+                if ( alt_desc ) { desc = img.alt; }
+                var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+src_url+'"'+alt+' width="'+size[1]+'" height="'+size[2]+'" '+border+'>'+nl_tag+nl_tag+'\n\n';
+                result += next_img;
+            }
+        }
+    }
+    if ( preview !== "" ) { preview += "\n\n"; }
+
+    return preview+result;
+}
+
+function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,alt_on,alt_desc)
+{
+    var preview = "";
+    var result = "";
+
+    var nodes = htmldoc.evaluate('//div[@class="vafloat2"]/table/tbody/tr/td[@align="center"]/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null);
+    if ( nodes === undefined ) {
+        result = "<Empty page>";
+    } else {
+        //alert( nodes.snapshotLength + " image(s)" );
+        if ( to_idx === undefined || to_idx === "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength; }
+        for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
+            var link = nodes.snapshotItem(idx);
+            if ( link ) {
+                img = link.children[0];
+            }
+            if ( !link || !img ) {
+                result = "<format parse error!>";
+                return result;
+            } else {
+                var src = img.getAttribute('src');
+                var alt = "";
+                var link_url = link.href+'?full=1';
+                  //
+                req.open( 'GET', link_url, false );
+                req.send( null );
+                if ( req.status != 200 && req.status !== 0 ) {
+                    result = "ошибка получения страницы " + link_url;
+                } else {
+                    var linkhtmldoc = createHTMLDocumentByString(req.responseText);
+                    var full_img = linkhtmldoc.evaluate('//table/tbody/tr/td[@align="center"]/a/img',linkhtmldoc,null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue;
+                    if ( !full_img ) {
+                        result = "ошибка получения адреса полного изображения из страницы " + link_url;
+                        return result;
+                    } else {
+                        var full_src = full_img.src;
+                        if ( alt_on ) { alt = ' alt="'+img.getAttribute('alt')+'"'; }
+                        if ( previews != 'none' ) {
+                            if ( previews != 'yes' ) {
+                                preview += '<a href="';
+                                if ( previews == 'linkimage' ) { preview += full_src; } else { preview += link.href; }
+                                preview +='">';
+                            }
+                            preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+'" border="'+preview_border+'">';
+                            if ( previews != 'yes' ) {
+                                preview += '</a>';
+                            }
+                            preview += '\n';
+                        }
+                          //
+                        var desc = '';
+                        if ( alt_on ) { alt = ' alt="'+full_img.alt+'"'; }
+                        if ( alt_desc ) { desc = full_img.alt; }
+                        var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+full_src+'"'+alt+' width="'+full_img.width+'" height="'+full_img.height+'" '+border+'>'+nl_tag+nl_tag+'\n\n';
+                        result += next_img;
+                    }
+                }
+            }
+        }
+    }
+    if ( preview !== "" ) { preview += "\n\n"; }
+
+    return preview+result;
+}
+
+function doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,alt_on,alt_desc)
+{
+    var preview = "";
+    var result = "";
+
+    var nodes = htmldoc.evaluate('//td[@class="giItemCell"]/div/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null);
+    if ( nodes === undefined ) {
+        result = "<Empty page>";
+    } else {
+        //alert( nodes.snapshotLength + " image(s)" );
+        var re_dom_url=/^((?:http:\/\/)?(?:\w+\.)\w+\.\w+)\//i;
+        var re_dom_url_res = re_dom_url.exec( url );
+        var root_url = "";
+        if ( re_dom_url_res ) { root_url = re_dom_url_res[1]; }
+        if ( to_idx === undefined || to_idx === "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength; }
+        for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
+            var link = nodes.snapshotItem(idx);
+            if ( link ) {
+                img = link.children[0];
+            }
+            if ( !link || !img ) {
+                result = "<format parse error!>";
+                return result;
+            } else {
+                var src = img.getAttribute('src');
+                if ( src[0] == '/' ) { src = root_url+src; }
+                var alt = "";
+                var link_url = link.href;
+                if ( link_url[0] == '/' ) { link_url = root_url+link_url; }
+                  //
+                req.open( 'GET', link_url, false );
+                req.send( null );
+                if ( req.status != 200 && req.status !== 0 ) {
+                    result = "ошибка получения страницы " + link_url;
+                } else {
+                    var linkhtmldoc = createHTMLDocumentByString(req.responseText);
+                    var full_img = linkhtmldoc.evaluate('//div[@id="photo"]/img',linkhtmldoc,null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue;
+                    if ( !full_img ) {
+                        result = "ошибка получения адреса полного изображения из страницы " + link_url;
+                        return result;
+                    } else {
+                        var full_src = full_img.src;
+                        if ( full_src[0] == '/' ) { full_src = root_url + full_src; }
+                        if ( alt_on ) { alt = ' alt="'+img.alt+'"'; }
+                        if ( previews != "none" ) {
+                            if ( previews != 'yes' ) {
+                                preview += '<a href="';
+                                if ( previews == 'linkimage' ) { preview += full_src; } else { preview += link_url; }
+                                preview +='">';
+                            }
+                            preview += '<img src="'+src+'"'+alt+' width="'+img.width+'" height="'+img.height+'" border="'+preview_border+'">';
+                            if ( previews != 'yes' ) {
+                                preview += '</a>';
+                            }
+                            preview += '\n';
+                        }
+                        var desc = '';
+                        if ( alt_on ) { alt = ' alt="'+full_img.alt+'"'; }
+                        if ( alt_desc ) { desc = full_img.alt; }
+                        var next_img = img_idx+'. '+desc+nl_tag+'\n<img src="'+full_src+'"'+alt+' width="'+full_img.width+'" height="'+full_img.height+'" '+border+'>'+nl_tag+nl_tag+'\n\n';
+                        result += next_img;
+                    }
+                }
+            }
+        }
+    }
+    if ( preview !== "" ) { preview += "\n\n"; }
+
+    return preview+result;
+}
+
+function setLabelText(id,text)
+{
+    var elem;
+
+    if( document.getElementById  && (elem=document.getElementById(id)) )
+    {
+        if( !elem.firstChild ) {
+           elem.appendChild( document.createTextNode( text ) );
+        } else  {
+            elem.firstChild.data = text;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+function doMakeTemplate() 
+{
+    var result = "<Unknown error>";
+
+    var type = document.getElementById('type_name').value;
+    var url = document.getElementById('url').value;
+
+    document.getElementById('result').value = "";
+    setLabelText("status","обработка ...");
+    var status = "";
+
+    var from_idx = document.getElementById('from').value;
+    if ( from_idx === undefined || from_idx === "" ) { from_idx = 1; }
+    var to_idx = document.getElementById('to').value;
+    var idx = document.getElementById('idx').value;
+    if ( idx === undefined || idx === "" ) { idx = 1; }
+    var border = document.getElementById('border').value;
+    if ( border === undefined || border === "" ) { border = 0; }
+    var v_space = document.getElementById('v_space').value;
+    if ( v_space === undefined ) { v_space = ""; }
+    var h_space = document.getElementById('h_space').value;
+    if ( h_space === undefined ) { h_space = ""; }
+    var nl_tag = document.getElementById('nl_tag').value;
+    if ( nl_tag == 'none' ) { nl_tag = ''; } else { nl_tag = '<'+nl_tag+'/>'; }
+    var previews = document.getElementById('previews').value;
+    if ( previews === undefined || previews === "" ) { previews = "none"; }
+    var preview_border = document.getElementById('preview_border').value;
+    if ( preview_border === undefined || preview_border === "" ) { preview_border = 0; }
+    var alt_on = document.getElementById('alt_on').checked;
+    var alt_desc = document.getElementById('alt_desc').checked;
+      //
+    border_str = 'border="'+border+'"';
+    if ( v_space !== "" ) { border_str+=' vspace="'+v_space+'"'; }
+    if ( h_space !== "" ) { border_str+=' hspace="'+h_space+'"'; }
+      //
+    if ( type == "ya.fotki" || "gallery1" || "gallery2" ) {
+        var req;
+        try {
+            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect UniversalBrowserAccess');
+            req = new XMLHttpRequest();
+        }
+        catch (error) {
+            alert("Error initializing XMLHttpRequest 1.\n" + error);
+        }
+        req.open( 'GET', url, false );
+        req.send( null );
+        if ( req.status != 200 && req.status !== 0 ) {
+            status = "ошибка получения альбома " + req.status;
+        } else {
+            var text = req.responseText;
+            text = text.replace(/(<[^>]*?)on(?:(?:un)?load|(?:db)?click|mouse(?:down|up|over|out|move)|key(?:press|down|up)|abort|blur|change|error|focus|re(?:size|set)|select|submit)\s*?=\s*?["'][^"']*?["']/ig, "$1");
+            text = text.replace(/<\s*?script[^>]*?>[\s\S]*?<\s*?\/script\s*?>/ig, "");
+            var htmldoc = createHTMLDocumentByString(text);
+            if ( type == "ya.fotki" ) {
+                result = doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,alt_on,alt_desc);
+                status = "ok";
+            } else if ( type == "gallery1" ) {
+                result = doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,alt_on,alt_desc);
+                status = "ok";
+            } else if ( type == "gallery2" ) {
+                result = doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,alt_on,alt_desc);
+                status = "ok";
+            } else {
+                result = "Unknown gallery type:"+type;
+                status = "gallery error";
+            }
+        }
+    } else {
+        result = "Unknown gallery type:"+type;
+        status = "gallery error";
+    }
+
+    document.getElementById('result').value = result;
+    doSaveSettings();
+    setLabelText("status",status);
 }
 
 </script>
