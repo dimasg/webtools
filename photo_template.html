@@ -74,7 +74,7 @@ function getCookie(name)
         var idx = cookies.indexOf(name+'=');
         if ( idx != -1 ) {
             idx += name.length+1;
-            eidx = cookies.indexOf(';',idx);
+            var eidx = cookies.indexOf(';',idx);
             if ( eidx == -1 ) { eidx = cookies.length; }
             value = unescape(cookies.substring(idx,eidx));
         }
@@ -85,7 +85,7 @@ function getCookie(name)
 
 function setSelectValue(selector,value)
 {
-    for( idx = 0; idx < selector.length; ++idx ) {
+    for( var idx = 0; idx < selector.length; ++idx ) {
         if ( selector[idx].value == value ) {
             selector.selectedIndex = idx;
         }
@@ -159,6 +159,7 @@ function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_ta
         if ( to_idx === undefined || to_idx === "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength; }
         for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
             var link = nodes.snapshotItem(idx);
+            var img;
             if ( link ) {
                 img = link.children[0];
             }
@@ -222,6 +223,7 @@ function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,nl_
         if ( to_idx === undefined || to_idx === "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength; }
         for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
             var link = nodes.snapshotItem(idx);
+            var img;
             if ( link ) {
                 img = link.children[0];
             }
@@ -291,6 +293,7 @@ function doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,n_idx,border
         if ( to_idx === undefined || to_idx === "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength; }
         for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
             var link = nodes.snapshotItem(idx);
+            var img;
             if ( link ) {
                 img = link.children[0];
             }
@@ -394,7 +397,7 @@ function doMakeTemplate()
     var alt_on = document.getElementById('alt_on').checked;
     var alt_desc = document.getElementById('alt_desc').checked;
       //
-    border_str = 'border="'+border+'"';
+    var border_str = 'border="'+border+'"';
     if ( v_space !== "" ) { border_str+=' vspace="'+v_space+'"'; }
     if ( h_space !== "" ) { border_str+=' hspace="'+h_space+'"'; }
       //
