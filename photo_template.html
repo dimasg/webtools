@@ -5,53 +5,82 @@
     <title>Форма генерации шаблона для публикации фотографий</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <style type="text/css">
+
 <!--
+
 body {
     margin:0.5em 0.5em 0.5em 0.5em;
     padding:0;
-    background:#EFE;
+    text-align: center;
+    color: #333333;
+    background: none repeat scroll 0% 0% #DCF0DC;
+}
+
+#main {
+    margin: 1.5em auto;
+    padding: 1em;
+    width: 80%;
+    text-align: left;
+    background: none repeat scroll 0% 0% #CEE0CE;
+    overflow: auto;
+    min-width: 550px;
 }
 
 #form {
-    padding: 1em;
-    margin: 1em;
-}
-
-#form-labels {
-    background:#EEF;
-    position:absolute;
-    top:2em;
-    left:2em;
-    padding:0.5em 0.5em 0.5em 0.5em;
-    text-align:right;
-}
-
-#form-inputs {
-    background:#FEE;
-    position:absolute;
-    top:2em;
-    left:13em;
-    right:2em;
-    padding:0.5em 0.5em 0.5em 0.5em;
-}
-
-label {
-    line-height:1.2em;
-}
-
-input {
-    line-height:1.2em;
+    overflow: auto;
+    padding: 0.5em;
 }
 
 #output {
-    padding-top: 12em;
-    margin: 1em;
+    width: 100%;
+    overflow: auto;
+}
+
+form div {
+    margin: 0.2em;
+}
+
+label.leftLabel {
+    float: left;
+    width: 20%;
+    height: 1em;
+    text-align: right;
+    position: relative;
+    top: 0.1em;
+    margin-right: 0.5em;
+}
+
+form label {
+    top: 0.1em;
+    height: 1em;
+    margin-right: 0.5em;
+    margin-left: 0.5em;
+}
+
+input.urlInput {
+    width: 70%;
+    background: none repeat scroll 0% 0% rgb(255, 255, 255);
+    border: 1px solid rgb(127, 157, 185);
+    height: 1.4em;
+}
+
+form input[type="text"] {
+    background: none repeat scroll 0% 0% rgb(255, 255, 255);
+    border: 1px solid rgb(127, 157, 185);
+    height: 1.4em;
+}
+
+label.outLabel {
+    height: 1em;
+    padding: 1em;
 }
 
 #result {
+    width: 99.8%;
+    border: 1px solid #7F9DB9;
 }
 
--->        
+-->
 </style>
 </head>
 
@@ -125,14 +154,14 @@ function doSaveSettings()
     setCookie( 'alt_desc', document.getElementById('alt_desc').checked );
 }
 
-function createDocumentFragmentByString(str) 
+function createDocumentFragmentByString(str)
 {
     var range = document.createRange();
     range.setStartAfter(document.body);
     return range.createContextualFragment(str);
 }
 
-function createHTMLDocumentByString(str) 
+function createHTMLDocumentByString(str)
 {
     var html = str.replace(/<!DOCTYPE.*?>/, '').replace(/<html.*?>/, '').replace(/<\/html>.*/, '');
     var XHTML_NS = 'http://www.w3.org/1999/xhtml';
@@ -366,7 +395,7 @@ function setLabelText(id,text)
     return false;
 }
 
-function doMakeTemplate() 
+function doMakeTemplate()
 {
     var result = "<Unknown error>";
 
@@ -445,54 +474,72 @@ function doMakeTemplate()
 
 </script>
 
+<div id="main">
     <div id="form">
         <form action="">
-            <div id="form-labels">
-                <label for="url">Адрес галереи:&nbsp;</label><br/>
-                <label for="type">Тип галереи:&nbsp;</label><br/>
+            <div>
+                <label for="url" class="leftLabel">Адрес галереи:</label>
+                <input type="text" class="urlInput" id="url" value="" maxlength="255" />
             </div>
-            <div id="form-inputs">
-                <input type="text" id="url" value="" size="128" maxlength="255" /><br/>
+            <div>
+                <label for="type" class="leftLabel">Тип галереи:</label>
                 <input type="radio" name="type" id="type" value="ya.fotki" checked="checked" onClick="document.getElementById('type_name').value='ya.fotki';" /> Яндекс.Фотки
                 <input type="radio" name="type" value="gallery1" onClick="document.getElementById('type_name').value='gallery1';" /> Gallery1 (menalto)
                 <input type="radio" name="type" value="gallery2" onClick="document.getElementById('type_name').value='gallery2';" /> Gallery2 (menalto)
-                <input type="hidden" id="type_name" value="ya.fotki" /><br/>
-                <br/>
-                <label for="from">С номера:&nbsp;</label><input type="text" id="from" value="1" size="2" maxlength="2" />
-                <label for="to">По номер:&nbsp;</label><input type="text" id="to" value="" size="2" maxlength="2" />
-                <label for="idx">Нумеровать c:&nbsp;</label><input type="text" id="idx" value="" size="2" maxlength="2" />
-                <label for="alt_on">Добавить alt:&nbsp;</label><input type="checkbox" id="alt_on" />
-                <label for="alt_desc">Добавить alt в описание:&nbsp;</label><input type="checkbox" id="alt_desc" />
-                <br/><br/>
-                <label for="border">Граница:&nbsp;</label><input type="text" id="border" value="1" size="1" maxlength="1" />
-                <label for="v_space">VSpace:&nbsp;</label><input type="text" id="v_space" value="5" size="2" maxlength="2" />
-                <label for="h_space">HSpace:&nbsp;</label><input type="text" id="h_space" value="" size="2" maxlength="2" />
-                <label for"nl_tag">Таг новой строки:&nbsp;</label>
-                <select id="nl_tag" />
+                <input type="hidden" id="type_name" value="ya.fotki" />
+            </div>
+            <div>
+                <label class="leftLabel">Фотографии:</label>
+                <label for="from">С номера:</label><input type="text" id="from" value="1" size="1" maxlength="2" />
+                <label for="to">По номер:</label><input type="text" id="to" value="" size="1" maxlength="2" />
+                <label for="idx">Нумеровать c:</label><input type="text" id="idx" value="" size="1" maxlength="2" />
+            </div>
+            <div>
+                <label class="leftLabel"></label>
+                <label for="alt_on">Добавить alt:</label><input type="checkbox" id="alt_on" />
+                <label for="alt_desc">Добавить alt в описание:</label><input type="checkbox" id="alt_desc" />
+            </div>
+            <div>
+                <label class="leftLabel"></label>
+                <label for="border">Граница:</label><input type="text" id="border" value="1" size="1" maxlength="1" />
+                <label for="v_space">VSpace:</label><input type="text" id="v_space" value="5" size="1" maxlength="2" />
+                <label for="h_space">HSpace:</label><input type="text" id="h_space" value="" size="1" maxlength="2" />
+                <label for="nl_tag">Таг новой строки:</label>
+                <select id="nl_tag">
                     <option value="none">Нет</option>
                     <option value="br">BR</option>
                     <option value="p">P</option>
                 </select>
-                <br/><br/>
-                <label for="previews">Миниатюры:&nbsp;</label>
+            </div>
+            <div>
+                <label for="previews" class="leftLabel">Миниатюры:</label>
                 <select id="previews">
                     <option value="none">Нет</option>
                     <option value="yes">Да</option>
                     <option value="linkimage">Со ссылкой на полную</option>
                     <option value="linkpage">Со ссылкой на страницу</option>
                 </select>
-                <label for="preview_border">Граница:&nbsp;</label><input type="text" id="preview_border" value="0" size="1" maxlength="1" /><br/>
-                <br/>
+                <label for="preview_border">Граница:</label><input type="text" id="preview_border" value="0" size="1" maxlength="1" />
+            </div>
+            <div>
+                <label class="leftLabel"></label>
                 <input type="button" value="Обработать" onClick="doMakeTemplate(this.form);" />
             </div>
         </form>
     </div>
 
     <div id="output">
-        <label for="status">Статус:&nbsp;&nbsp;</label><label id="status"></label><br/><br/>
-        <label for="result">Результат:</label><br/>
-        <textarea id="result" cols="100" rows="25" readonly="readonly"></textarea>
+        <div>
+            <label for="status" class="outLabel">Статус:</label><label id="status"></label>
+        </div>
+        <div>
+            <label for="result" class="outLabel">Результат:</label>
+        </div>
+        <div>
+            <textarea id="result" cols="100" rows="25" readonly="readonly"></textarea>
+        </div>
     </div>
+</div>
 
 </body>
 
