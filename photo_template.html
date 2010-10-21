@@ -179,7 +179,6 @@ function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_ta
                     link_url = root_url+link_url;
                 }
                 var size = re_size.exec( img.getAttribute('style') );
-                throw new Error( src );
                 var src_url = re_src.exec( src )[1];
                 if ( (size[1] == 800 && size[2] == 600)||(size[1] == 600 && size[2] == 800) ) {
                     src_url += '_XL';
