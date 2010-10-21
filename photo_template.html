@@ -155,7 +155,7 @@ function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_ta
         result = "";
         //alert( nodes.snapshotLength + " image(s)" );
         var re_size=/max-width: (\d+)px; max-height: (\d+)px;/;
-        var re_src=/(.*)_[XXSL]{1,4}$/;
+        var re_src=/(.*)_[XXSLM]{1,4}$/;
         if ( to_idx === undefined || to_idx === "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength; }
         for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
             var link = nodes.snapshotItem(idx);
@@ -179,6 +179,7 @@ function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_ta
                     link_url = root_url+link_url;
                 }
                 var size = re_size.exec( img.getAttribute('style') );
+                throw new Error( src );
                 var src_url = re_src.exec( src )[1];
                 if ( (size[1] == 800 && size[2] == 600)||(size[1] == 600 && size[2] == 800) ) {
                     src_url += '_XL';
