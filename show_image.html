@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+
+<head>
+    <title>Показ произвольной фотографии</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+
+<!--
+
+body {
+    margin:0.5em 0.5em 0.5em 0.5em;
+    padding:0;
+    text-align: center;
+    color: #333333;
+    background: none repeat scroll 0% 0% #DCF0DC;
+}
+
+#main {
+    margin: 1.5em auto;
+    padding: 1em;
+    width: 80%;
+    text-align: left;
+    background: none repeat scroll 0% 0% #CEE0CE;
+    overflow: auto;
+    min-width: 550px;
+}
+
+#form {
+    overflow: auto;
+    padding: 0.5em;
+}
+
+#output {
+    width: 100%;
+    overflow: auto;
+}
+
+form div {
+    margin: 0.2em;
+}
+
+label.leftLabel {
+    float: left;
+    width: 20%;
+    height: 1em;
+    text-align: right;
+    position: relative;
+    top: 0.1em;
+    margin-right: 0.5em;
+}
+
+form label {
+    top: 0.1em;
+    height: 1em;
+    margin-right: 0.5em;
+    margin-left: 0.5em;
+}
+
+input.urlInput {
+    width: 70%;
+    background: none repeat scroll 0% 0% rgb(255, 255, 255);
+    border: 1px solid rgb(127, 157, 185);
+    height: 1.4em;
+}
+
+form input[type="text"] {
+    background: none repeat scroll 0% 0% rgb(255, 255, 255);
+    border: 1px solid rgb(127, 157, 185);
+    height: 1.4em;
+}
+
+label.outLabel {
+    height: 1em;
+    padding: 1em;
+}
+
+#result {
+    width: 99.8%;
+    border: 1px solid #7F9DB9;
+}
+
+div.outImage {
+    text-align: center;
+}
+
+-->
+</style>
+</head>
+
+
+<body onload="doLoadSettings()">
+
+<script language="javascript" type="text/javascript">
+
+function setCookie(name,value)
+{
+    document.cookie = name + '=' + escape(value);
+}
+
+function getCookie(name)
+{
+    var value = null;
+
+    var cookies = document.cookie;
+    if ( cookies.length > 0 ) {
+        var idx = cookies.indexOf(name+'=');
+        if ( idx != -1 ) {
+            idx += name.length+1;
+            var eidx = cookies.indexOf(';',idx);
+            if ( eidx == -1 ) { eidx = cookies.length; }
+            value = unescape(cookies.substring(idx,eidx));
+        }
+    }
+
+    return value;
+}
+
+function setSelectValue(selector,value)
+{
+    for( var idx = 0; idx < selector.length; ++idx ) {
+        if ( selector[idx].value == value ) {
+            selector.selectedIndex = idx;
+        }
+    }
+}
+
+function doLoadSettings()
+{
+}
+
+function doSaveSettings()
+{
+}
+
+function doShowImage()
+{
+    document.getElementById('image').src = document.getElementById('url').value;
+}
+
+</script>
+
+<div id="main">
+    <div id="form">
+        <form action="">
+            <div>
+                <label for="url" class="leftLabel">Адрес картинки:</label>
+                <input type="text" class="urlInput" id="url" value="" maxlength="255" />
+            </div>
+            <div>
+                <label class="leftLabel"></label>
+                <input type="button" value="Обработать" onClick="doShowImage(this.form);" />
+            </div>
+        </form>
+    </div>
+
+    <div id="output">
+        <div>
+            <label for="status" class="outLabel">Статус:</label><label id="status"></label>
+        </div>
+        <div>
+            <label for="result" class="outLabel">Результат:</label>
+            <div class="outImage">
+                <img id="image" src="" />
+            </div>
+        </div>
+        <div>
+        </div>
+    </div>
+</div>
+
+</body>
+
+</html>
