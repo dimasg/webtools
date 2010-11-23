@@ -112,6 +112,31 @@ function getCookie(name)
     return value;
 }
 
+function has_storage() 
+{
+    try {
+        return false; // не работает localStorage для file:// в firefox
+        return 'localStorage' in window && window['localStorage'] !== null;
+    } catch (e) {
+        return false;
+    }
+}
+
+
+function setKeyValue(key,value)
+{
+    if ( has_storage() ) {
+        window.localStorage.setItem(key,value);
+    } else {
+        setCookie(key,value);
+    }
+}
+
+function getKeyValue(key)
+{
+    return ( has_storage() ? window.localStorage.getItem(key) : getCookie(key) );
+}
+
 function setSelectValue(selector,value)
 {
     for( var idx = 0; idx < selector.length; ++idx ) {
@@ -124,37 +149,37 @@ function setSelectValue(selector,value)
 function doLoadSettings()
 {
     var c_val;
-    c_val = getCookie('border');
+    c_val = getKeyValue('border');
     if ( c_val !== null ) { document.getElementById('border').value = c_val; }
-    c_val = getCookie('v_space');
+    c_val = getKeyValue('v_space');
     if ( c_val !== null ) { document.getElementById('v_space').value = c_val; }
-    c_val = getCookie('h_space');
+    c_val = getKeyValue('h_space');
     if ( c_val !== null ) { document.getElementById('h_space').value = c_val; }
-    c_val = getCookie('nl_tag');
+    c_val = getKeyValue('nl_tag');
     if ( c_val !== null ) { setSelectValue( document.getElementById('nl_tag'), c_val ); }
-    c_val = getCookie('previews');
+    c_val = getKeyValue('previews');
     if ( c_val !== null ) { setSelectValue( document.getElementById('previews'), c_val ); }
-    c_val = getCookie('preview_border');
+    c_val = getKeyValue('preview_border');
     if ( c_val !== null ) { document.getElementById('preview_border').value = c_val; }
-    c_val = getCookie('preview_org');
+    c_val = getKeyValue('preview_org');
     if ( c_val !== null ) { setSelectValue( document.getElementById('preview_org'), c_val ); }
-    c_val = getCookie('alt_on');
+    c_val = getKeyValue('alt_on');
     if ( c_val !== null ) { document.getElementById('alt_on').checked = c_val; }
-    c_val = getCookie('alt_desc');
+    c_val = getKeyValue('alt_desc');
     if ( c_val !== null ) { document.getElementById('alt_desc').checked = c_val; }
 }
 
 function doSaveSettings()
 {
-    setCookie( 'border', document.getElementById('border').value );
-    setCookie( 'v_space', document.getElementById('v_space').value );
-    setCookie( 'h_space', document.getElementById('h_space').value );
-    setCookie( 'nl_tag', document.getElementById('nl_tag').value );
-    setCookie( 'previews', document.getElementById('previews').value );
-    setCookie( 'preview_border', document.getElementById('preview_border').value );
-    setCookie( 'preview_org', document.getElementById('preview_org').value );
-    setCookie( 'alt_on', document.getElementById('alt_on').checked );
-    setCookie( 'alt_desc', document.getElementById('alt_desc').checked );
+    setKeyValue( 'border', document.getElementById('border').value );
+    setKeyValue( 'v_space', document.getElementById('v_space').value );
+    setKeyValue( 'h_space', document.getElementById('h_space').value );
+    setKeyValue( 'nl_tag', document.getElementById('nl_tag').value );
+    setKeyValue( 'previews', document.getElementById('previews').value );
+    setKeyValue( 'preview_border', document.getElementById('preview_border').value );
+    setKeyValue( 'preview_org', document.getElementById('preview_org').value );
+    setKeyValue( 'alt_on', document.getElementById('alt_on').checked );
+    setKeyValue( 'alt_desc', document.getElementById('alt_desc').checked );
 }
 
 function createDocumentFragmentByString(str)
