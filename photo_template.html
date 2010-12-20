@@ -547,7 +547,7 @@ function doMakeTemplate()
         <form action="">
             <div>
                 <label for="url" class="leftLabel">Адрес галереи:</label>
-                <input type="url" class="urlInput" id="url" value="" maxlength="255" placeholder="url нужной папки на фотохостинге" autofocus />
+                <input type="url" class="urlInput" id="url" value="" maxlength="255" placeholder="url нужной папки на фотохостинге" autofocus required />
                 <script>
                     if (!("autofocus" in document.createElement("input"))) {
                         document.getElementById("url").focus();
