@@ -547,7 +547,7 @@ function doMakeTemplate()
         <form action="">
             <div>
                 <label for="url" class="leftLabel">Адрес галереи:</label>
-                <input type="text" class="urlInput" id="url" value="" maxlength="255" />
+                <input type="text" class="urlInput" id="url" value="" maxlength="255" placeholder="url нужной папки на фотохостинге" />
             </div>
             <div>
                 <label for="type" class="leftLabel">Тип галереи:</label>
@@ -558,9 +558,9 @@ function doMakeTemplate()
             </div>
             <div>
                 <label class="leftLabel">Фотографии:</label>
-                <label for="from">С номера:</label><input type="text" id="from" value="1" size="1" maxlength="2" />
+                <label for="from">С номера:</label><input type="text" id="from" value="1" size="1" maxlength="2" placeholder="1" />
                 <label for="to">По номер:</label><input type="text" id="to" value="" size="1" maxlength="2" />
-                <label for="idx">Нумеровать c:</label><input type="text" id="idx" value="" size="1" maxlength="2" />
+                <label for="idx">Нумеровать c:</label><input type="text" id="idx" value="" size="1" maxlength="2" placeholder="1" />
             </div>
             <div>
                 <label class="leftLabel"></label>
@@ -569,7 +569,7 @@ function doMakeTemplate()
             </div>
             <div>
                 <label class="leftLabel"></label>
-                <label for="border">Граница:</label><input type="text" id="border" value="1" size="1" maxlength="1" />
+                <label for="border">Граница:</label><input type="text" id="border" value="1" size="1" maxlength="1" placeholder="0" />
                 <label for="v_space">VSpace:</label><input type="text" id="v_space" value="5" size="1" maxlength="2" />
                 <label for="h_space">HSpace:</label><input type="text" id="h_space" value="" size="1" maxlength="2" />
                 <label for="nl_tag">Таг новой строки:</label>
@@ -591,7 +591,7 @@ function doMakeTemplate()
                     <option value="linkimage">Со ссылкой на полную</option>
                     <option value="linkpage">Со ссылкой на страницу</option>
                 </select>
-                <label for="preview_border">Граница:</label><input type="text" id="preview_border" value="0" size="1" maxlength="1" />
+                <label for="preview_border">Граница:</label><input type="text" id="preview_border" value="0" size="1" maxlength="1" placeholder="0" />
                 <label for="preview_org">&nbsp;</label>
                 <select id="preview_org">
                     <option value="none">Не расставлять</option>
