@@ -547,7 +547,7 @@ function doMakeTemplate()
         <form action="">
             <div>
                 <label for="url" class="leftLabel">Адрес галереи:</label>
-                <input type="text" class="urlInput" id="url" value="" maxlength="255" placeholder="url нужной папки на фотохостинге" autofocus />
+                <input type="url" class="urlInput" id="url" value="" maxlength="255" placeholder="url нужной папки на фотохостинге" autofocus />
                 <script>
                     if (!("autofocus" in document.createElement("input"))) {
                         document.getElementById("url").focus();
@@ -563,9 +563,9 @@ function doMakeTemplate()
             </div>
             <div>
                 <label class="leftLabel">Фотографии:</label>
-                <label for="from">С номера:</label><input type="text" id="from" value="1" size="1" maxlength="2" placeholder="1" />
-                <label for="to">По номер:</label><input type="text" id="to" value="" size="1" maxlength="2" />
-                <label for="idx">Нумеровать c:</label><input type="text" id="idx" value="" size="1" maxlength="2" placeholder="1" />
+                <label for="from">С номера:</label><input type="number" id="from" value="1" size="1" maxlength="2" min="1" placeholder="1" />
+                <label for="to">По номер:</label><input type="number" id="to" value="" size="1" maxlength="2" />
+                <label for="idx">Нумеровать c:</label><input type="number" id="idx" value="" size="1" maxlength="2" min="0" placeholder="1" />
             </div>
             <div>
                 <label class="leftLabel"></label>
@@ -574,9 +574,9 @@ function doMakeTemplate()
             </div>
             <div>
                 <label class="leftLabel"></label>
-                <label for="border">Граница:</label><input type="text" id="border" value="1" size="1" maxlength="1" placeholder="0" />
-                <label for="v_space">VSpace:</label><input type="text" id="v_space" value="5" size="1" maxlength="2" />
-                <label for="h_space">HSpace:</label><input type="text" id="h_space" value="" size="1" maxlength="2" />
+                <label for="border">Граница:</label><input type="number" id="border" value="1" size="1" maxlength="1" min="0" placeholder="0" />
+                <label for="v_space">VSpace:</label><input type="number" id="v_space" value="5" size="1" maxlength="2" min="0" />
+                <label for="h_space">HSpace:</label><input type="number" id="h_space" value="" size="1" maxlength="2" min="0" />
                 <label for="nl_tag">Таг новой строки:</label>
                 <select id="nl_tag">
                     <option value="none">Нет</option>
@@ -596,7 +596,7 @@ function doMakeTemplate()
                     <option value="linkimage">Со ссылкой на полную</option>
                     <option value="linkpage">Со ссылкой на страницу</option>
                 </select>
-                <label for="preview_border">Граница:</label><input type="text" id="preview_border" value="0" size="1" maxlength="1" placeholder="0" />
+                <label for="preview_border">Граница:</label><input type="number" id="preview_border" value="0" size="1" maxlength="1" min="0" placeholder="0" />
                 <label for="preview_org">&nbsp;</label>
                 <select id="preview_org">
                     <option value="none">Не расставлять</option>
