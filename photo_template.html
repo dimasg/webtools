@@ -439,6 +439,81 @@ function doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,n_idx,border
     return preview ? doMakePreviews(preview,preview_org)+result : result;
 }
 
+function doMakeTemplateFromFlickr(url,req,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links)
+{
+    var preview = null;
+    var result = "";
+
+    var nodes = htmldoc.evaluate('//span[@class="photo_container pc_s"]/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null);
+    if ( nodes === undefined ) {
+        result = "<Empty page>";
+    } else {
+        alert( nodes.snapshotLength + " image(s)" );
+        var re_dom_url=/^((?:http:\/\/)?(?:\w+\.)\w+\.\w+)\//i;
+        var re_dom_url_res = re_dom_url.exec( url );
+        var root_url = "";
+        if ( re_dom_url_res ) { root_url = re_dom_url_res[1]; }
+        if ( to_idx === undefined || to_idx === "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength; }
+        if ( previews != 'none' ) { preview = new Array(); }
+        var re_src=/(.*)_[s]{1}(\.\w+)$/;
+        for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
+            var link = nodes.snapshotItem(idx);
+            var img;
+            if ( link ) {
+                img = link.children[0];
+            }
+            if ( !link || !img ) {
+                result = "<format parse error!>";
+                return result;
+            } else {
+                var src = img.getAttribute('src');
+                if ( src[0] == '/' ) { src = root_url+src; }
+                var alt = "";
+                var link_url = link.href;
+                if ( link_url[0] == '/' ) { link_url = root_url+link_url; }
+                  //
+//                req.open( 'GET', link_url, false );
+//                req.send( null );
+//                if ( req.status != 200 && req.status !== 0 ) {
+//                    result = "ошибка получения страницы " + link_url;
+//                } else {
+//                    var linkhtmldoc = createHTMLDocumentByString(req.responseText);
+//                    var full_img = linkhtmldoc.evaluate('//div[@id="photo"]/img',linkhtmldoc,null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue;
+                    var full_img = img;
+                    if ( !full_img ) {
+                        result = "ошибка получения адреса полного изображения из страницы " + link_url;
+                        return result;
+                    } else {
+                        var re_src_res = re_src.exec( full_img.src );
+                        var full_src = re_src_res[1]+'_b'+re_src_res[2];
+                        if ( full_src[0] == '/' ) { full_src = root_url + full_src; }
+                        if ( alt_on ) { alt = ' alt="'+img.alt+'"'; }
+                        if ( previews != "none" ) {
+                            var next_preview = '';
+                            if ( previews != 'yes' ) {
+                                next_preview += '<a href="'+(previews=='linkimage'?full_src:link_url)+'">';
+                            }
+                            next_preview += '<img src="'+src+'"'+alt+' width="'+img.width+'" height="'+img.height+'" border="'+preview_border+'">';
+                            if ( previews != 'yes' ) {
+                                next_preview += '</a>';
+                            }
+                            preview.push( next_preview );
+                        }
+                        var desc = '';
+                        if ( alt_on ) { alt = ' alt="'+full_img.alt+'"'; }
+                        if ( alt_desc ) { desc = full_img.alt; }
+                        var img_idx_text = add_links ? doMakeIdxText( img_idx, (img_idx===n_idx), ((idx+1) >= to_idx) ) : '';
+                        var next_img = img_idx_text+img_idx+'. '+desc+nl_tag+'\n<img src="'+full_src+'"'+alt+' '+border+'>'+nl_tag+nl_tag+'\n\n';//+' width="'+full_img.width+'" height="'+full_img.height+'" '
+                        result += next_img;
+                    }
+//                }
+            }
+        }
+    }
+
+    return preview ? doMakePreviews(preview,preview_org)+result : result;
+}
+
 function setLabelText(id,text)
 {
     var elem;
@@ -500,12 +575,12 @@ function doMakeTemplate()
         try {
             netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect UniversalBrowserAccess');
             req = new XMLHttpRequest();
+            req.open( 'GET', url, false );
+            req.send( null );
         }
         catch (error) {
             alert("Error initializing XMLHttpRequest 1.\n" + error);
         }
-        req.open( 'GET', url, false );
-        req.send( null );
         if ( req.status != 200 && req.status !== 0 ) {
             status = "ошибка получения альбома " + req.status;
         } else {
@@ -524,6 +599,10 @@ function doMakeTemplate()
             } else if ( type == "gallery2" ) {
                 result =
                     doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links);
+                status = "ok";
+            } else if ( type == "flickr" ) {
+                result =
+                    doMakeTemplateFromFlickr(url,req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links);
                 status = "ok";
             } else {
                 result = "Unknown gallery type:"+type;
@@ -559,6 +638,7 @@ function doMakeTemplate()
                 <input type="radio" name="type" id="type" value="ya.fotki" checked="checked" onClick="document.getElementById('type_name').value='ya.fotki';" /> Яндекс.Фотки
                 <input type="radio" name="type" value="gallery1" onClick="document.getElementById('type_name').value='gallery1';" /> Gallery1 (menalto)
                 <input type="radio" name="type" value="gallery2" onClick="document.getElementById('type_name').value='gallery2';" /> Gallery2 (menalto)
+                <input type="radio" name="type" value="flickr" onClick="document.getElementById('type_name').value='flickr';" /> Flickr                
                 <input type="hidden" id="type_name" value="ya.fotki" />
             </div>
             <div>
