@@ -7,6 +7,7 @@ import cookielib
 import json
 import logging
 #import pprint
+import re
 import urllib
 import urllib2
 
@@ -103,6 +104,10 @@ class MyShowsRu:
             print 'Unknown alias - {0}'.format(alias)
             exit(1)
         else:
+            logging.debug(
+                'title_by_alias({0}) = {1}'.format(
+                    alias, self.config.alias[alias]
+                ))
             return self.config.alias[alias]
 
     def id_by_title(self, title):
@@ -114,7 +119,8 @@ class MyShowsRu:
         for show_id in self.shows_data:
             next_show = self.shows_data[show_id]
             if next_show['title'] == title:
-                return next_show['showId']
+                logging.debug('id_by_title({0}) = {1}'.format(title, show_id))
+                return show_id
 
         return None
 
@@ -169,7 +175,7 @@ class MyShowsRu:
 
     def show_last_watched(self, alias):
         """ show last watched episode for alias """
-        show_id = self.id_by_title(self.title_by_alias(alias))
+        show_id = self.id_by_title(self.title_by_alias(alias.lower()))
         epis = self.load_episodes(show_id)
         watched = self.load_watched(show_id)
         episode_id = self.get_last_watched(show_id)
@@ -203,7 +209,7 @@ class MyShowsRu:
 
     def show_next_for_watch(self, alias):
         """ show next episode for watch for alias """
-        show_id = self.id_by_title(self.title_by_alias(alias))
+        show_id = self.id_by_title(self.title_by_alias(alias).lower())
         epis = self.load_episodes(show_id)
         episode_id = self.get_first_unwatched(show_id)
         episode = epis['episodes'][episode_id]
@@ -213,6 +219,42 @@ class MyShowsRu:
                 episode['seasonNumber'], episode['episodeNumber'],
                 episode['title'],
             )
+
+    def check_episode(self, epi):
+        """ set epi episode as watched """
+        re_m = re.match('(\w+)s(\d{1,2})e(\d{1,2})', epi.lower())
+        if not re_m:
+            print 'Bad format for check - "{0}"'.format(epi)
+        else:
+            alias = re_m.group(1)
+            season = int(re_m.group(2))
+            episode = int(re_m.group(3))
+            epis = self.load_episodes(
+                self.id_by_title(self.title_by_alias(alias))
+            )
+            episodes = epis['episodes']
+            for epi_id in episodes:
+                next_episode = episodes[epi_id]
+                if next_episode['seasonNumber'] == season\
+                  and next_episode['episodeNumber'] == episode:
+                    logging.debug(
+                        'Set checked: {0}{1}'.format(
+                            self.api_url,
+                            self.config.url.check_episode.format(epi_id)
+                    ))
+                    request = urllib2.Request(
+                        self.api_url
+                        + self.config.url.check_episode.format(epi_id)
+                    )
+                    self.opener.open(request)
+                    print
+                    print \
+                        'Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" is checked'\
+                        .format(next_episode['title'],
+                                next_episode['seasonNumber'],
+                                next_episode['episodeNumber'],
+                                epis['title'])
+                    break
 
 
 def main():
@@ -228,7 +270,14 @@ def main():
     last_parser.add_argument('last_alias', action='store', help='show alias')
 
     next_parser = subparsers.add_parser('next', help='show next to watch')
-    next_parser.add_argument('next_alias', action='store', help='show alias')
+    next_parser.add_argument('next_alias', action='store', help='next alias')
+
+    check_parser = subparsers.add_parser(
+        'check', help='check episode as watched, gaS01E02 for example'
+    )
+    check_parser.add_argument(
+        'check_alias', action='store', help='check alias'
+    )
 
     parser.add_argument(
         '--debug', action='store_const',
@@ -259,6 +308,10 @@ def main():
         myshows.show_last_watched(cmd_args.last_alias)
     elif 'next_alias' in cmd_args:
         myshows.show_next_for_watch(cmd_args.next_alias)
+    elif 'check_alias' in cmd_args:
+        myshows.check_episode(cmd_args.check_alias)
+    else:
+        parser.print_usage()
 
     exit(0)
 
