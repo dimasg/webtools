@@ -8,6 +8,7 @@ url: {
     list_watched: '/profile/shows/{0}/',
     list_episodes: '/shows/{0}',
     check_episode: '/profile/episodes/check/{0}',
+    uncheck_episode: '/profile/episodes/uncheck/{0}',
 }
 
 alias: {

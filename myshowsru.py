@@ -220,7 +220,7 @@ class MyShowsRu:
                 episode['title'],
             )
 
-    def check_episode(self, epi):
+    def set_episode_check(self, epi, check):
         """ set epi episode as watched """
         re_m = re.match('(\w+)s(\d{1,2})e(\d{1,2})', epi.lower())
         if not re_m:
@@ -237,23 +237,24 @@ class MyShowsRu:
                 next_episode = episodes[epi_id]
                 if next_episode['seasonNumber'] == season\
                   and next_episode['episodeNumber'] == episode:
+                    if check:
+                        url = self.config.url.check_episode.format(epi_id)
+                        msg = 'checked'
+                    else:
+                        url = self.config.url.uncheck_episode.format(epi_id)
+                        msg = 'unchecked'
                     logging.debug(
-                        'Set checked: {0}{1}'.format(
-                            self.api_url,
-                            self.config.url.check_episode.format(epi_id)
-                    ))
-                    request = urllib2.Request(
-                        self.api_url
-                        + self.config.url.check_episode.format(epi_id)
-                    )
+                            'Set checked: {0}{1}'.format(self.api_url, url))
+                    request = urllib2.Request(self.api_url + url)
                     self.opener.open(request)
                     print
                     print \
-                        'Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" is checked'\
+                        'Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" set {4}'\
                         .format(next_episode['title'],
                                 next_episode['seasonNumber'],
                                 next_episode['episodeNumber'],
-                                epis['title'])
+                                epis['title'],
+                                msg)
                     break
 
 
@@ -277,6 +278,12 @@ def main():
     )
     check_parser.add_argument(
         'check_alias', action='store', help='check alias'
+    )
+    uncheck_parser = subparsers.add_parser(
+        'uncheck', help='uncheck episode as watched, tgS01E02 for example'
+    )
+    uncheck_parser.add_argument(
+        'uncheck_alias', action='store', help='uncheck alias'
     )
 
     parser.add_argument(
@@ -309,7 +316,9 @@ def main():
     elif 'next_alias' in cmd_args:
         myshows.show_next_for_watch(cmd_args.next_alias)
     elif 'check_alias' in cmd_args:
-        myshows.check_episode(cmd_args.check_alias)
+        myshows.set_episode_check(cmd_args.check_alias, True)
+    elif 'uncheck_alias' in cmd_args:
+        myshows.set_episode_check(cmd_args.uncheck_alias, False)
     else:
         parser.print_usage()
 
