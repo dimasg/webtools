@@ -1,0 +1,19 @@
+api_domain: 'api.myshows.ru'
+
+login: { name: 'demo', md5pass: 'fe01ce2a7fbac8fafaed7c982a04e229' }
+
+url: {
+    login: '/profile/login',
+    list_shows: '/profile/shows/',
+    list_watched: '/profile/shows/{0}/',
+    list_episodes: '/shows/{0}',
+}
+
+alias: {
+    fut: 'Futurama',
+    ga: "Grey's Anatomy",
+    tbb: 'The Big Bang Theory',
+    tg: 'Top Gear',
+    wd: 'The Walking Dead'
+}
+
