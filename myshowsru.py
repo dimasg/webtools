@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """ myshows.ru utility """
 
+import argparse
 import cookielib
 import json
 import logging
@@ -21,7 +22,7 @@ class MyShowsRu:
         self.cookie_jar = cookielib.CookieJar()
         self.opener = urllib2.build_opener(
                 urllib2.HTTPCookieProcessor(self.cookie_jar)
-                )
+            )
         self.logged_ = False
         self.list_loaded_ = False
         self.api_url = 'http://' + self.config.api_domain
@@ -37,6 +38,9 @@ class MyShowsRu:
             'login': self.config.login.name,
             'password': self.config.login.md5pass},
             )
+        logging.debug(
+            'Login url:{0}{1}'.format(self.api_url, self.config.url.login)
+        )
         request = urllib2.Request(
             self.api_url + self.config.url.login, req_data
         )
@@ -59,6 +63,9 @@ class MyShowsRu:
             return
         if not self.logged_:
             self.do_login()
+        logging.debug(
+            'Login: {0}{1}'.format(self.api_url, self.config.url.list_shows)
+        )
         request = urllib2.Request(
             self.api_url + self.config.url.list_shows
         )
@@ -71,6 +78,7 @@ class MyShowsRu:
         if not self.list_loaded_:
             self.load_shows()
 
+        print
         for show_id in self.shows_data:
             next_show = self.shows_data[show_id]
             if next_show['watchedEpisodes'] <= 0:
@@ -90,6 +98,7 @@ class MyShowsRu:
 
     def title_by_alias(self, alias):
         """ return show id by alias """
+        logging.debug('title_by_alias({0})'.format(alias))
         if alias not in self.config.alias:
             print 'Unknown alias - {0}'.format(alias)
             exit(1)
@@ -98,6 +107,7 @@ class MyShowsRu:
 
     def id_by_title(self, title):
         """ return show id by title """
+        logging.debug('id_by_title({0})'.format(title))
         if not self.list_loaded_:
             self.load_shows()
 
@@ -113,6 +123,10 @@ class MyShowsRu:
         if not self.logged_:
             self.do_login()
         if show_id not in  self.episodes_data:
+            logging.debug(
+                'Load episodes: {0}{1}'.format(
+                    self.api_url, self.config.url.list_episodes.format(show_id)
+            ))
             request = urllib2.Request(
                 self.api_url + self.config.url.list_episodes.format(show_id)
             )
@@ -126,6 +140,10 @@ class MyShowsRu:
         if not self.logged_:
             self.do_login()
         if show_id not in  self.watched_data:
+            logging.debug(
+                'Load watched: {0}{1}'.format(
+                    self.api_url, self.config.url.list_watched.format(show_id)
+            ))
             request = urllib2.Request(
                 self.api_url + self.config.url.list_watched.format(show_id)
             )
@@ -156,6 +174,7 @@ class MyShowsRu:
         watched = self.load_watched(show_id)
         episode_id = self.get_last_watched(show_id)
         episode = epis['episodes'][episode_id]
+        print
         print 'Last for {0} is s{1:02d}e{2:02d} ("{3}") at {4}'.format(
                 epis['title'],
                 episode['seasonNumber'], episode['episodeNumber'],
@@ -188,6 +207,7 @@ class MyShowsRu:
         epis = self.load_episodes(show_id)
         episode_id = self.get_first_unwatched(show_id)
         episode = epis['episodes'][episode_id]
+        print
         print 'First watch for {0} is s{1:02d}e{2:02d} ("{3}")'.format(
                 epis['title'],
                 episode['seasonNumber'], episode['episodeNumber'],
@@ -197,13 +217,48 @@ class MyShowsRu:
 
 def main():
     """ main subroutine """
-    logging.basicConfig(level=logging.DEBUG,
+    parser = argparse.ArgumentParser()
+
+    subparsers = parser.add_subparsers(help='commands')
+
+    list_parser = subparsers.add_parser('list', help='show list of show')
+    list_parser.set_defaults(list=True)
+
+    last_parser = subparsers.add_parser('last', help='show last watched')
+    last_parser.add_argument('last_alias', action='store', help='show alias')
+
+    next_parser = subparsers.add_parser('next', help='show next to watch')
+    next_parser.add_argument('next_alias', action='store', help='show alias')
+
+    parser.add_argument(
+        '--debug', action='store_const',
+        const=logging.DEBUG, default=logging.ERROR,
+        help='debug output'
+    )
+    parser.add_argument(
+        '--config', action='store', default='myshows.cfg',
+        help='config file'
+    )
+    parser.add_argument(
+        '--info', action='store_const', dest='debug',
+        const=logging.INFO, default=logging.ERROR,
+        help='info output'
+    )
+    cmd_args = parser.parse_args()
+
+    logging.basicConfig(level=cmd_args.debug,
             format='%(asctime)s %(levelname)s: %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S')
-    myshows = MyShowsRu('myshows.cfg')
-#    myshows.list_shows()
-    myshows.show_last_watched('ga')
-    myshows.show_next_for_watch('ga')
+    logging.debug('Parsed command line args: {0}'.format(cmd_args))
+
+    myshows = MyShowsRu(cmd_args.config)
+
+    if 'list' in cmd_args:
+        myshows.list_shows()
+    elif 'last_alias' in cmd_args:
+        myshows.show_last_watched(cmd_args.last_alias)
+    elif 'next_alias' in cmd_args:
+        myshows.show_next_for_watch(cmd_args.next_alias)
 
     exit(0)
 
