@@ -209,7 +209,7 @@ class MyShowsRu:
 
     def show_next_for_watch(self, alias):
         """ show next episode for watch for alias """
-        show_id = self.id_by_title(self.title_by_alias(alias).lower())
+        show_id = self.id_by_title(self.title_by_alias(alias.lower()))
         epis = self.load_episodes(show_id)
         episode_id = self.get_first_unwatched(show_id)
         episode = epis['episodes'][episode_id]
