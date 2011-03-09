@@ -40,7 +40,9 @@ class MyShowsRu:
             'password': self.config.login.md5pass},
             )
         logging.debug(
-            'Login url:{0}{1}'.format(self.api_url, self.config.url.login)
+            'Login url:{0}{1}{2}'.format(
+                self.api_url, self.config.url.login, req_data
+            )
         )
         request = urllib2.Request(
             self.api_url + self.config.url.login, req_data
@@ -257,6 +259,31 @@ class MyShowsRu:
                                 msg)
                     break
 
+    def search_show(self, query):
+        """ search show """
+        if not self.logged_:
+            self.do_login()
+        req_data = urllib.urlencode({
+            'q': query,
+            })
+        logging.debug(
+            'Search url/data:{0}{1}{2}'.format(
+                self.api_url, self.config.url.search, req_data
+            )
+        )
+        request = urllib2.Request(
+            self.api_url + self.config.url.search, req_data
+        )
+        handle = self.opener.open(request)
+        search_result = json.loads(handle.read())
+        logging.debug('Search result: {0}'.format(search_result))
+        print
+        for epi_id in search_result:
+            episode = search_result[epi_id]
+            print '"{1}", started: {2} (id={0})'.format(
+                    epi_id, episode['title'], episode['started']
+            )
+
 
 def main():
     """ main subroutine """
@@ -284,6 +311,12 @@ def main():
     )
     uncheck_parser.add_argument(
         'uncheck_alias', action='store', help='uncheck alias'
+    )
+    search_parser = subparsers.add_parser(
+        'search', help='search show'
+    )
+    search_parser.add_argument(
+        'search_alias', action='store', help='search show'
     )
 
     parser.add_argument(
@@ -319,6 +352,8 @@ def main():
         myshows.set_episode_check(cmd_args.check_alias, True)
     elif 'uncheck_alias' in cmd_args:
         myshows.set_episode_check(cmd_args.uncheck_alias, False)
+    elif 'search_alias' in cmd_args:
+        myshows.search_show(cmd_args.search_alias)
     else:
         parser.print_usage()
 
