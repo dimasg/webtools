@@ -10,6 +10,7 @@ url: {
     check_episode: '/profile/episodes/check/{0}',
     uncheck_episode: '/profile/episodes/uncheck/{0}',
     search: '/shows/search/',
+    status: '/profile/shows/{0}/{1}',
 }
 
 alias: {

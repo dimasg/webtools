@@ -91,12 +91,13 @@ class MyShowsRu:
             else:
                 show_sign = ' '
 
-            print '{0}{1}: {2}/{3}, rating = {4}, '.format(
+            print '{0}{1}: {2}/{3}, rating = {4}({5})'.format(
                     show_sign,
                     next_show['title'],
                     # next_show['ruTitle'],
                     next_show['watchedEpisodes'], next_show['totalEpisodes'],
-                    next_show['rating']
+                    next_show['rating'],
+                    next_show['watchStatus'][0]
                 )
 
     def title_by_alias(self, alias):
@@ -277,12 +278,30 @@ class MyShowsRu:
         handle = self.opener.open(request)
         search_result = json.loads(handle.read())
         logging.debug('Search result: {0}'.format(search_result))
+        return search_result
+
+    def show_search_result(self, query):
+        """ show search result """
+        search_result = self.search_show(query)
         print
-        for epi_id in search_result:
-            episode = search_result[epi_id]
+        for show_id in search_result:
+            show = search_result[show_id]
             print '"{1}", started: {2} (id={0})'.format(
-                    epi_id, episode['title'], episode['started']
+                    show_id, show['title'], show['started']
             )
+
+    def set_show_status(self, alias, status):
+        """ set show status """
+        search_result = self.search_show(self.title_by_alias(alias.lower()))
+        for show_id in search_result:
+            show = search_result[show_id]
+            url = self.config.url.status.format(show['id'], status)
+            logging.debug(
+                    'Set show status: {0}{1}'.format(self.api_url, url))
+            request = urllib2.Request(self.api_url + url)
+            self.opener.open(request)
+            print
+            print 'Show "{0}" status set to {1}'.format(show['title'], status)
 
 
 def main():
@@ -316,7 +335,17 @@ def main():
         'search', help='search show'
     )
     search_parser.add_argument(
-        'search_alias', action='store', help='search show'
+        'search_alias', action='store', help='search alias'
+    )
+    status_parser = subparsers.add_parser(
+        'status', help='set show status'
+    )
+    status_parser.add_argument(
+        'status_alias', action='store', help='show alias'
+    )
+    status_parser.add_argument(
+        'status_value', action='store', help='show status',
+        choices=['watching', 'later', 'cancelled', 'remove']
     )
 
     parser.add_argument(
@@ -353,7 +382,9 @@ def main():
     elif 'uncheck_alias' in cmd_args:
         myshows.set_episode_check(cmd_args.uncheck_alias, False)
     elif 'search_alias' in cmd_args:
-        myshows.search_show(cmd_args.search_alias)
+        myshows.show_search_result(cmd_args.search_alias)
+    elif 'status_alias' in cmd_args:
+        myshows.set_show_status(cmd_args.status_alias, cmd_args.status_value)
     else:
         parser.print_usage()
 
