@@ -99,6 +99,7 @@ class MyShowsRu:
                     next_show['rating'],
                     next_show['watchStatus'][0]
                 )
+        print
 
     def title_by_alias(self, alias):
         """ return show id by alias """
