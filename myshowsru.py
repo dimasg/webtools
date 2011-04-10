@@ -223,15 +223,14 @@ class MyShowsRu:
                 episode['title'],
             )
 
-    def set_episode_check(self, epi, check):
+    def set_episode_check(self, alias, epi, check):
         """ set epi episode as watched """
-        re_m = re.match('(\w+)s(\d{1,2})e(\d{1,2})', epi.lower())
+        re_m = re.match('s(\d{1,2})e(\d{1,2})', epi.lower())
         if not re_m:
             print 'Bad format for check - "{0}"'.format(epi)
         else:
-            alias = re_m.group(1)
-            season = int(re_m.group(2))
-            episode = int(re_m.group(3))
+            season = int(re_m.group(1))
+            episode = int(re_m.group(2))
             epis = self.load_episodes(
                 self.id_by_title(self.title_by_alias(alias))
             )
@@ -289,6 +288,7 @@ class MyShowsRu:
             print '"{1}", started: {2} (id={0})'.format(
                     show_id, show['title'], show['started']
             )
+        print
 
     def set_show_status(self, alias, status):
         """ set show status """
@@ -302,6 +302,7 @@ class MyShowsRu:
             self.opener.open(request)
             print
             print 'Show "{0}" status set to {1}'.format(show['title'], status)
+            print
 
 
 def main():
@@ -323,13 +324,19 @@ def main():
         'check', help='check episode as watched, gaS01E02 for example'
     )
     check_parser.add_argument(
-        'check_alias', action='store', help='check alias'
+        'check_alias', action='store', help='show alias'
+    )
+    check_parser.add_argument(
+        'episode', action='store', help='episode'
     )
     uncheck_parser = subparsers.add_parser(
         'uncheck', help='uncheck episode as watched, tgS01E02 for example'
     )
     uncheck_parser.add_argument(
-        'uncheck_alias', action='store', help='uncheck alias'
+        'uncheck_alias', action='store', help='show alias'
+    )
+    uncheck_parser.add_argument(
+        'episode', action='store', help='episode'
     )
     search_parser = subparsers.add_parser(
         'search', help='search show'
@@ -378,9 +385,9 @@ def main():
     elif 'next_alias' in cmd_args:
         myshows.show_next_for_watch(cmd_args.next_alias)
     elif 'check_alias' in cmd_args:
-        myshows.set_episode_check(cmd_args.check_alias, True)
+        myshows.set_episode_check(cmd_args.check_alias, cmd_args.episode, True)
     elif 'uncheck_alias' in cmd_args:
-        myshows.set_episode_check(cmd_args.uncheck_alias, False)
+        myshows.set_episode_check(cmd_args.uncheck_alias, cmd_args.episode, False)
     elif 'search_alias' in cmd_args:
         myshows.show_search_result(cmd_args.search_alias)
     elif 'status_alias' in cmd_args:
