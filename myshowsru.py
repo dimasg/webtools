@@ -389,7 +389,9 @@ def main():
     elif 'check_alias' in cmd_args:
         myshows.set_episode_check(cmd_args.check_alias, cmd_args.episode, True)
     elif 'uncheck_alias' in cmd_args:
-        myshows.set_episode_check(cmd_args.uncheck_alias, cmd_args.episode, False)
+        myshows.set_episode_check(
+            cmd_args.uncheck_alias, cmd_args.episode, False
+        )
     elif 'search_alias' in cmd_args:
         myshows.show_search_result(cmd_args.search_alias)
     elif 'status_alias' in cmd_args:
