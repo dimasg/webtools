@@ -223,6 +223,7 @@ class MyShowsRu:
                 episode['seasonNumber'], episode['episodeNumber'],
                 episode['title'],
             )
+        print
 
     def set_episode_check(self, alias, epi, check):
         """ set epi episode as watched """
