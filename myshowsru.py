@@ -183,20 +183,27 @@ class MyShowsRu:
         epis = self.load_episodes(show_id)
         watched = self.load_watched(show_id)
         episode_id = self.get_last_watched(show_id)
-        episode = epis['episodes'][episode_id]
         print
-        print 'Last for {0} is s{1:02d}e{2:02d} ("{3}") at {4}'.format(
-                epis['title'],
-                episode['seasonNumber'], episode['episodeNumber'],
-                episode['title'],
-                watched[episode_id]['watchDate']
-            )
+        if episode_id == None:
+            print '{0} is unwatched'.format(epis['title'])
+        else:
+            episode = epis['episodes'][episode_id]
+            print 'Last for {0} is s{1:02d}e{2:02d} ("{3}") at {4}'.format(
+                    epis['title'],
+                    episode['seasonNumber'], episode['episodeNumber'],
+                    episode['title'],
+                    watched[episode_id]['watchDate']
+                )
+        print
 
     def get_first_unwatched(self, show_id):
         """ return first unwathced episode for show id """
         episodes = self.load_episodes(show_id)['episodes']
-        last_watched = \
-            episodes[self.get_last_watched(show_id)]['sequenceNumber']
+        last_watched = self.get_last_watched(show_id)
+        if last_watched == None:
+            last_watched = 0
+        else:
+            last_watched = episodes[last_watched]['sequenceNumber']
 
         episode_id = 0
         first_unwatched = None
