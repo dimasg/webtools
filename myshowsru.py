@@ -4,6 +4,7 @@
 
 import argparse
 import cookielib
+import datetime
 import json
 import logging
 #import pprint
@@ -12,6 +13,11 @@ import urllib
 import urllib2
 
 import config
+
+
+def tr_out(from_str):
+    """ translate unshowed symbols """
+    return from_str.replace(u'\u2026', '...')
 
 
 class MyShowsRu:
@@ -78,9 +84,7 @@ class MyShowsRu:
 
     def list_shows(self):
         """ list user shows """
-        if not self.list_loaded_:
-            self.load_shows()
-
+        self.load_shows()
         print
         for show_id in self.shows_data:
             next_show = self.shows_data[show_id]
@@ -93,7 +97,7 @@ class MyShowsRu:
 
             print '{0}{1}: {2}/{3}, rating = {4}({5})'.format(
                     show_sign,
-                    next_show['title'],
+                    tr_out(next_show['title']),
                     # next_show['ruTitle'],
                     next_show['watchedEpisodes'], next_show['totalEpisodes'],
                     next_show['rating'],
@@ -177,9 +181,9 @@ class MyShowsRu:
 
         return episode_id
 
-    def show_last_watched(self, alias):
+    def show_last_watched_by_alias(self, alias):
         """ show last watched episode for alias """
-        show_id = self.id_by_title(self.title_by_alias(alias.lower()))
+        show_id = self.id_by_title(self.title_by_alias(alias))
         epis = self.load_episodes(show_id)
         watched = self.load_watched(show_id)
         episode_id = self.get_last_watched(show_id)
@@ -189,12 +193,76 @@ class MyShowsRu:
         else:
             episode = epis['episodes'][episode_id]
             print 'Last for {0} is s{1:02d}e{2:02d} ("{3}") at {4}'.format(
-                    epis['title'],
+                    tr_out(epis['title']),
                     episode['seasonNumber'], episode['episodeNumber'],
-                    episode['title'],
+                    tr_out(episode['title']),
                     watched[episode_id]['watchDate']
                 )
         print
+
+    def show_last_watched_by_date(self, alias):
+        """ show last watched episode(s) for date """
+        date_to = datetime.date.today()
+        if alias == 'day':
+            date_from = date_to.replace(day=date_to.day - 1)
+        elif alias == 'week':
+            date_from = date_to.replace(day=date_to.day - 7)
+        elif alias == 'month':
+            date_from = date_to.replace(month=date_to.month - 1)
+        else:
+            print 'Unknown alias - {0}'.format(alias)
+            exit(1)
+
+        self.load_shows()
+        print
+        print 'Watched from {0} to {1}'.format(
+            date_from.strftime('%Y-%m-%d'),
+            date_to.strftime('%Y-%m-%d')
+        )
+        print
+        re_c = re.compile('(\d{1,2})\.(\d{1,2})\.(\d{4})')
+        count = 0
+        for show_id in self.shows_data:
+            next_show = self.shows_data[show_id]
+            if next_show['watchedEpisodes'] <= 0:
+                continue
+            watched = self.load_watched(next_show['showId'])
+            epis = None
+            for epi_id in watched:
+                next_episode = watched[epi_id]
+                re_m = re_c.match(next_episode['watchDate'])
+                if not re_m:
+                    print 'Warning: unknown date format - {0}'.format(
+                        next_episode['watchDate'])
+                    continue
+                ds = [int(s) for s in re_m.group(3, 2, 1)]
+                epi_date = datetime.date(ds[0], ds[1], ds[2])
+                if date_from <= epi_date and epi_date <= date_to:
+                    count += 1
+                    if not epis:
+                        epis = self.load_episodes(show_id)
+                    if epi_id not in epis['episodes']:
+                        print 'Episode not found: {0}'.format( epi_id )
+                        print epis
+                        continue
+                    episode = epis['episodes'][epi_id]
+                    print '{0} s{1:02d}e{2:02d} "{3}" at {4}'.format(
+                            tr_out(epis['title']),
+                            episode['seasonNumber'], episode['episodeNumber'],
+                            tr_out(episode['title']),
+                            watched[epi_id]['watchDate']
+                        )
+        print
+        print 'Total count: {0}'.format(count)
+        print
+
+    def show_last_watched(self, alias):
+        """ show last watched episode(s) """
+        alias = alias.lower()
+        if alias in ['day', 'week', 'month']:
+            self.show_last_watched_by_date(alias)
+        else:
+            self.show_last_watched_by_alias(alias)
 
     def get_first_unwatched(self, show_id):
         """ return first unwathced episode for show id """
@@ -226,9 +294,9 @@ class MyShowsRu:
         episode = epis['episodes'][episode_id]
         print
         print 'First watch for {0} is s{1:02d}e{2:02d} ("{3}")'.format(
-                epis['title'],
+                tr_out(epis['title']),
                 episode['seasonNumber'], episode['episodeNumber'],
-                episode['title'],
+                tr_out(episode['title']),
             )
         print
 
@@ -261,11 +329,13 @@ class MyShowsRu:
                     print
                     print \
                         'Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" set {4}'\
-                        .format(next_episode['title'],
-                                next_episode['seasonNumber'],
-                                next_episode['episodeNumber'],
-                                epis['title'],
-                                msg)
+                        .format(
+                            tr_out(next_episode['title']),
+                            next_episode['seasonNumber'],
+                            next_episode['episodeNumber'],
+                            tr_out(epis['title']),
+                            msg
+                        )
                     break
 
     def search_show(self, query):
@@ -295,7 +365,7 @@ class MyShowsRu:
         for show_id in search_result:
             show = search_result[show_id]
             print '"{1}", started: {2} (id={0})'.format(
-                    show_id, show['title'], show['started']
+                    show_id, tr_out(show['title']), show['started']
             )
         print
 
@@ -310,7 +380,9 @@ class MyShowsRu:
             request = urllib2.Request(self.api_url + url)
             self.opener.open(request)
             print
-            print 'Show "{0}" status set to {1}'.format(show['title'], status)
+            print 'Show "{0}" status set to {1}'.format(
+                tr_out(show['title']), status
+            )
             print
 
 
