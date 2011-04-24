@@ -243,7 +243,8 @@ class MyShowsRu:
                         epis = self.load_episodes(show_id)
                     if epi_id not in epis['episodes']:
                         print 'Episode not found: {0}'.format( epi_id )
-                        print epis
+                        logging.debug('Episodes:')
+                        logging.debug(epis)
                         continue
                     episode = epis['episodes'][epi_id]
                     print '{0} s{1:02d}e{2:02d} "{3}" at {4}'.format(
