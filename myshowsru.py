@@ -228,6 +228,7 @@ class MyShowsRu:
                 continue
             watched = self.load_watched(next_show['showId'])
             epis = None
+            last_map = {}
             for epi_id in watched:
                 next_episode = watched[epi_id]
                 re_m = re_c.match(next_episode['watchDate'])
@@ -235,24 +236,32 @@ class MyShowsRu:
                     print 'Warning: unknown date format - {0}'.format(
                         next_episode['watchDate'])
                     continue
-                ds = [int(s) for s in re_m.group(3, 2, 1)]
-                epi_date = datetime.date(ds[0], ds[1], ds[2])
+                dtv = [int(s) for s in re_m.group(3, 2, 1)]
+                epi_date = datetime.date(dtv[0], dtv[1], dtv[2])
                 if date_from <= epi_date and epi_date <= date_to:
-                    count += 1
                     if not epis:
                         epis = self.load_episodes(show_id)
+                    count += 1
                     if epi_id not in epis['episodes']:
-                        print 'Episode not found: {0}'.format( epi_id )
+                        print 'Episode not found: {0}'.format(epi_id)
                         logging.debug('Episodes:')
                         logging.debug(epis)
                         continue
-                    episode = epis['episodes'][epi_id]
-                    print '{0} s{1:02d}e{2:02d} "{3}" at {4}'.format(
-                            tr_out(epis['title']),
-                            episode['seasonNumber'], episode['episodeNumber'],
-                            tr_out(episode['title']),
-                            watched[epi_id]['watchDate']
-                        )
+                    else:
+                        episode = epis['episodes'][epi_id]
+                        date_key = epi_date.toordinal() * 1000\
+                            + episode['seasonNumber'] * 10\
+                            + episode['episodeNumber']
+                        last_map[date_key] = episode
+
+            for date_key in sorted(last_map.keys()):
+                episode = last_map[date_key]
+                print '{0} s{1:02d}e{2:02d} "{3}" at {4}'.format(
+                        tr_out(epis['title']),
+                        episode['seasonNumber'], episode['episodeNumber'],
+                        tr_out(episode['title']),
+                        watched[str(episode['id'])]['watchDate']
+                    )
         print
         print 'Total count: {0}'.format(count)
         print
