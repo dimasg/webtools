@@ -204,11 +204,12 @@ class MyShowsRu:
         """ show last watched episode(s) for date """
         date_to = datetime.date.today()
         if alias == 'day':
-            date_from = date_to.replace(day=date_to.day - 1)
+            date_from = date_to + datetime.timedelta(days= -1)
         elif alias == 'week':
-            date_from = date_to.replace(day=date_to.day - 7)
+            date_from = date_to + datetime.timedelta(days= -7)
         elif alias == 'month':
-            date_from = date_to.replace(month=date_to.month - 1)
+            prev_month = date_to.replace(day=1) + datetime.timedelta(days= -1)
+            date_from = date_to + datetime.timedelta(days= - prev_month.day)
         else:
             print 'Unknown alias - {0}'.format(alias)
             exit(1)
@@ -406,7 +407,7 @@ def main():
     list_parser.set_defaults(list=True)
 
     last_parser = subparsers.add_parser('last', help='show last watched')
-    last_parser.add_argument('last_alias', action='store', help='show alias')
+    last_parser.add_argument('last_alias', action='store', help='show alias or period - day, week of month')
 
     next_parser = subparsers.add_parser('next', help='show next to watch')
     next_parser.add_argument('next_alias', action='store', help='next alias')
