@@ -123,7 +123,7 @@ class MyShowsRu:
                 next_episode = episodes[epi_id]
                 if season == -1 or next_episode['seasonNumber'] == season:
                     list_map[
-                        next_episode['seasonNumber']*1000
+                        next_episode['seasonNumber'] * 1000
                         + next_episode['episodeNumber']
                     ] = next_episode
 
@@ -134,7 +134,9 @@ class MyShowsRu:
                 next_season = next_episode['seasonNumber']
                 if current_season != next_season:
                     current_season = next_season
-                    print '{0} Season {1}:'.format(epis['title'], current_season)
+                    print '{0} Season {1}:'.format(
+                        epis['title'], current_season
+                    )
                 comment = ''
                 epi_id = str(next_episode['id'])
                 if epi_id in watched:
@@ -252,12 +254,12 @@ class MyShowsRu:
         """ show last watched episode(s) for date """
         date_to = datetime.date.today()
         if alias == 'day':
-            date_from = date_to + datetime.timedelta(days= -1)
+            date_from = date_to + datetime.timedelta(days=-1)
         elif alias == 'week':
-            date_from = date_to + datetime.timedelta(days= -7)
+            date_from = date_to + datetime.timedelta(days=-7)
         elif alias == 'month':
-            prev_month = date_to.replace(day=1) + datetime.timedelta(days= -1)
-            date_from = date_to + datetime.timedelta(days= - prev_month.day)
+            prev_month = date_to.replace(day=1) + datetime.timedelta(days=-1)
+            date_from = date_to + datetime.timedelta(days=-prev_month.day)
         else:
             print 'Unknown alias - {0}'.format(alias)
             exit(1)
@@ -458,7 +460,10 @@ def main():
     )
 
     last_parser = subparsers.add_parser('last', help='show last watched')
-    last_parser.add_argument('last_alias', action='store', help='show alias or period - day, week of month')
+    last_parser.add_argument(
+        'last_alias', action='store',
+        help='show alias or period - day, week of month'
+    )
 
     next_parser = subparsers.add_parser('next', help='show next to watch')
     next_parser.add_argument('next_alias', action='store', help='next alias')
