@@ -82,8 +82,8 @@ class MyShowsRu:
         self.shows_data = json.loads(handle.read())
         self.list_loaded_ = True
 
-    def list_shows(self):
-        """ list user shows """
+    def list_all_shows(self):
+        """ list all user shows """
         self.load_shows()
         print
         for show_id in self.shows_data:
@@ -104,6 +104,54 @@ class MyShowsRu:
                     next_show['watchStatus'][0]
                 )
         print
+
+    def list_show(self, alias):
+        """ list user show by alias """
+        re_m = re.match('(\D+)(\d{1,2})?', alias.lower())
+        if not re_m:
+            print 'Bad format for list - "{0}"'.format(alias)
+        else:
+            season = -1
+            if re_m.lastindex == 2:
+                season = int(re_m.group(2))
+            show_id = self.id_by_title(self.title_by_alias(re_m.group(1)))
+
+            epis = self.load_episodes(show_id)
+            episodes = epis['episodes']
+            list_map = {}
+            for epi_id in episodes:
+                next_episode = episodes[epi_id]
+                if season == -1 or next_episode['seasonNumber'] == season:
+                    list_map[
+                        next_episode['seasonNumber']*1000
+                        + next_episode['episodeNumber']
+                    ] = next_episode
+
+            watched = self.load_watched(show_id)
+            current_season = -1
+            for epi_num in sorted(list_map.keys()):
+                next_episode = list_map[epi_num]
+                next_season = next_episode['seasonNumber']
+                if current_season != next_season:
+                    current_season = next_season
+                    print '{0} Season {1}:'.format(epis['title'], current_season)
+                comment = ''
+                epi_id = str(next_episode['id'])
+                if epi_id in watched:
+                    comment = 'watched ' + watched[epi_id]['watchDate']
+                print '  "{0}" (s{1:02d}e{2:02d}) {3}'.format(
+                        tr_out(next_episode['title']),
+                        next_episode['seasonNumber'],
+                        next_episode['episodeNumber'],
+                        comment
+                    )
+
+    def list_shows(self, alias):
+        """ list user shows """
+        if alias == 'all':
+            self.list_all_shows()
+        else:
+            self.list_show(alias)
 
     def title_by_alias(self, alias):
         """ return show id by alias """
@@ -403,8 +451,11 @@ def main():
 
     subparsers = parser.add_subparsers(help='commands')
 
-    list_parser = subparsers.add_parser('list', help='show list of show')
-    list_parser.set_defaults(list=True)
+    list_parser = subparsers.add_parser('list', help='show list of show(s)')
+    list_parser.add_argument(
+        'list_alias', default='all',
+        action='store', help='show alias for list one show'
+    )
 
     last_parser = subparsers.add_parser('last', help='show last watched')
     last_parser.add_argument('last_alias', action='store', help='show alias or period - day, week of month')
@@ -470,8 +521,8 @@ def main():
 
     myshows = MyShowsRu(cmd_args.config)
 
-    if 'list' in cmd_args:
-        myshows.list_shows()
+    if 'list_alias' in cmd_args:
+        myshows.list_shows(cmd_args.list_alias)
     elif 'last_alias' in cmd_args:
         myshows.show_last_watched(cmd_args.last_alias)
     elif 'next_alias' in cmd_args:
