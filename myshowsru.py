@@ -17,7 +17,8 @@ import config
 
 def tr_out(from_str):
     """ translate unshowed symbols """
-    return from_str.replace(u'\u2026', '...')
+    return from_str.encode('utf-8')
+#    return from_str.replace(u'\u2026', '...')
 
 
 class MyShowsRu:
@@ -135,7 +136,7 @@ class MyShowsRu:
                 if current_season != next_season:
                     current_season = next_season
                     print '{0} Season {1}:'.format(
-                        epis['title'], current_season
+                        tr_out(epis['title']), current_season
                     )
                 comment = ''
                 epi_id = str(next_episode['id'])
@@ -239,7 +240,7 @@ class MyShowsRu:
         episode_id = self.get_last_watched(show_id)
         print
         if episode_id == None:
-            print '{0} is unwatched'.format(epis['title'])
+            print '{0} is unwatched'.format(tr_out(epis['title']))
         else:
             episode = epis['episodes'][episode_id]
             print 'Last for {0} is s{1:02d}e{2:02d} ("{3}") at {4}'.format(
