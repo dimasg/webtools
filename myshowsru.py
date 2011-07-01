@@ -96,11 +96,12 @@ class MyShowsRu:
             else:
                 show_sign = ' '
 
-            print '{0}{1}: {2}/{3}, rating = {4}({5})'.format(
+            print '{0}{1}: {2}/{3} ({4}%), rating = {4}({5})'.format(
                     show_sign,
                     tr_out(next_show['title']),
                     # next_show['ruTitle'],
                     next_show['watchedEpisodes'], next_show['totalEpisodes'],
+                    100*next_show['watchedEpisodes']/next_show['totalEpisodes'],
                     next_show['rating'],
                     next_show['watchStatus'][0]
                 )
