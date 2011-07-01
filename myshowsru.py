@@ -96,7 +96,7 @@ class MyShowsRu:
             else:
                 show_sign = ' '
 
-            print '{0}{1}: {2}/{3} ({4}%), rating = {4}({5})'.format(
+            print '{0}{1}: {2}/{3} ({4}%), rating = {5}({6})'.format(
                     show_sign,
                     tr_out(next_show['title']),
                     # next_show['ruTitle'],
