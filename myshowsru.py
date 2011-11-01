@@ -96,14 +96,19 @@ class MyShowsRu:
             else:
                 show_sign = ' '
 
-            print '{0}{1}: {2}/{3} ({4}%), rating = {5}({6})'.format(
+            alias = self.alias_by_title(next_show['title'])
+            if not alias:
+                alias = '-'
+
+            print '{0}{1}({7}): {2}/{3} ({4}%), rating = {5}({6})'.format(
                     show_sign,
                     tr_out(next_show['title']),
                     # next_show['ruTitle'],
                     next_show['watchedEpisodes'], next_show['totalEpisodes'],
                     100*next_show['watchedEpisodes']/next_show['totalEpisodes'],
                     next_show['rating'],
-                    next_show['watchStatus'][0]
+                    next_show['watchStatus'][0],
+                    alias
                 )
         print
 
@@ -169,6 +174,16 @@ class MyShowsRu:
                     alias, self.config.alias[alias]
                 ))
             return self.config.alias[alias]
+
+
+    def alias_by_title(self, title):
+        """ return show alias by title """
+        logging.debug('alias_by_title({0})'.format(title))
+        for alias, a_title in self.config.alias.iteritems():
+            if a_title == title:
+                return alias
+
+        return ''
 
     def id_by_title(self, title):
         """ return show id by title """
