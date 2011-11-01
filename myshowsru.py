@@ -87,7 +87,7 @@ class MyShowsRu:
         """ list all user shows """
         self.load_shows()
         print
-        for show_id in self.shows_data:
+        for show_id in sorted(self.shows_data, key=lambda show_id: self.shows_data[show_id]['title']):
             next_show = self.shows_data[show_id]
             if next_show['watchedEpisodes'] <= 0:
                 show_sign = '-'
