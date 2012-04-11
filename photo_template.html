@@ -4,6 +4,8 @@
 <head>
     <meta charset="utf-8" />
     <title>Форма генерации шаблона для публикации фотографий</title>
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="jquery.xdomainajax.js"></script>
 <style type="text/css">
 
 <!--
@@ -570,45 +572,43 @@ function doMakeTemplate()
     if ( v_space !== "" ) { border_str+=' vspace="'+v_space+'"'; }
     if ( h_space !== "" ) { border_str+=' hspace="'+h_space+'"'; }
       //
-    if ( type == "ya.fotki" || "gallery1" || "gallery2" ) {
+    if ( type == "ya.fotki" || type == "gallery1" || type == "gallery2" ) {
+        $('#container').load('http://google.com'); // SERIOUSLY!
+
         var req;
-        try {
-            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect UniversalBrowserAccess');
-            req = new XMLHttpRequest();
-            req.open( 'GET', url, false );
-            req.send( null );
-        }
-        catch (error) {
-            alert("Error initializing XMLHttpRequest 1.\n" + error);
-        }
-        if ( req.status != 200 && req.status !== 0 ) {
-            status = "ошибка получения альбома " + req.status;
-        } else {
-            var text = req.responseText;
-            text = text.replace(/(<[^>]*?)on(?:(?:un)?load|(?:db)?click|mouse(?:down|up|over|out|move)|key(?:press|down|up)|abort|blur|change|error|focus|re(?:size|set)|select|submit)\s*?=\s*?["'][^"']*?["']/ig, "$1");
-            text = text.replace(/<\s*?script[^>]*?>[\s\S]*?<\s*?\/script\s*?>/ig, "");
-            var htmldoc = createHTMLDocumentByString(text);
-            if ( type == "ya.fotki" ) {
-                result =
-                    doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links);
-                status = "ok";
-            } else if ( type == "gallery1" ) {
-                result =
-                    doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links);
-                status = "ok";
-            } else if ( type == "gallery2" ) {
-                result =
-                    doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links);
-                status = "ok";
-            } else if ( type == "flickr" ) {
-                result =
-                    doMakeTemplateFromFlickr(url,req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links);
-                status = "ok";
-            } else {
-                result = "Unknown gallery type:"+type;
-                status = "gallery error";
+
+        $.get( url,
+            function(res) {
+                var text = res.responseText;
+                text = text.replace(/(<[^>]*?)on(?:(?:un)?load|(?:db)?click|mouse(?:down|up|over|out|move)|key(?:press|down|up)|abort|blur|change|error|focus|re(?:size|set)|select|submit)\s*?=\s*?["'][^"']*?["']/ig, "$1");
+                text = text.replace(/<\s*?script[^>]*?>[\s\S]*?<\s*?\/script\s*?>/ig, "");
+                var htmldoc = createHTMLDocumentByString(text);
+                if ( type == "ya.fotki" ) {
+                    result =
+                        doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links);
+                    status = "ok";
+                } else if ( type == "gallery1" ) {
+                    result =
+                        doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links);
+                    status = "ok";
+                } else if ( type == "gallery2" ) {
+                    result =
+                        doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links);
+                    status = "ok";
+                } else if ( type == "flickr" ) {
+                    result =
+                        doMakeTemplateFromFlickr(url,req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links);
+                    status = "ok";
+                } else {
+                    result = "Unknown gallery type:"+type;
+                    status = "gallery error";
+                }
+                document.getElementById('result').value = result;
+                doSaveSettings();
+                setLabelText("status",status);
             }
-        }
+        );
+        return;
     } else {
         result = "Unknown gallery type:"+type;
         status = "gallery error";
