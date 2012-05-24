@@ -105,7 +105,7 @@ class MyShowsRu:
                     tr_out(next_show['title']),
                     # next_show['ruTitle'],
                     next_show['watchedEpisodes'], next_show['totalEpisodes'],
-                    100*next_show['watchedEpisodes']/next_show['totalEpisodes'],
+                    100 * next_show['watchedEpisodes'] / next_show['totalEpisodes'],
                     next_show['rating'],
                     next_show['watchStatus'][0],
                     alias
@@ -174,7 +174,6 @@ class MyShowsRu:
                     alias, self.config.alias[alias]
                 ))
             return self.config.alias[alias]
-
 
     def alias_by_title(self, title):
         """ return show alias by title """
