@@ -103,7 +103,9 @@ class MyShowsRu:
         """ list all user shows """
         self.load_shows()
         print
-        for show_id in sorted(self.shows_data, key=lambda show_id: self.shows_data[show_id]['title']):
+        for show_id in sorted(
+            self.shows_data, key=lambda show_id: self.shows_data[show_id]['title']
+        ):
             next_show = self.shows_data[show_id]
             if next_show['watchedEpisodes'] <= 0:
                 show_sign = '-'
@@ -218,7 +220,7 @@ class MyShowsRu:
         """ load episode data by show id """
         if not self.logged_:
             self.do_login()
-        if show_id not in  self.episodes_data:
+        if show_id not in self.episodes_data:
             logging.debug(
                 'Load episodes: {0}{1}'.format(
                     self.api_url, self.config.url.list_episodes.format(show_id)
@@ -235,7 +237,7 @@ class MyShowsRu:
         """ load watched data by show id """
         if not self.logged_:
             self.do_login()
-        if show_id not in  self.watched_data:
+        if show_id not in self.watched_data:
             logging.debug(
                 'Load watched: {0}{1}'.format(
                     self.api_url, self.config.url.list_watched.format(show_id)
