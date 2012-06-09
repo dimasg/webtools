@@ -9,6 +9,7 @@ import json
 import logging
 #import pprint
 import re
+from sys import stderr
 import urllib
 import urllib2
 
@@ -42,29 +43,44 @@ class MyShowsRu:
         """ authorization """
         if self.logged_:
             return
-        req_data = urllib.urlencode({
-            'login': self.config.login.name,
-            'password': self.config.login.md5pass},
+        try:
+            req_data = urllib.urlencode({
+                'login': self.config.login.name,
+                'password': self.config.login.md5pass},
+                )
+            logging.debug(
+                'Login url:{0}{1}{2}'.format(
+                    self.api_url, self.config.url.login, req_data
+                )
             )
-        logging.debug(
-            'Login url:{0}{1}{2}'.format(
-                self.api_url, self.config.url.login, req_data
+            request = urllib2.Request(
+                self.api_url + self.config.url.login, req_data
             )
-        )
-        request = urllib2.Request(
-            self.api_url + self.config.url.login, req_data
-        )
-        # handle = urllib2.urlopen(request)
-        handle = self.opener.open(request)
-        logging.debug('Login result: {0}/{1}'.format(
-            handle.headers, handle.read())
-        )
-        self.cookie_jar.clear(
-            self.config.api_domain, '/', 'SiteUser[login]'
-        )
-        self.cookie_jar.clear(
-            self.config.api_domain, '/', 'SiteUser[password]'
-        )
+            # handle = urllib2.urlopen(request)
+            handle = self.opener.open(request)
+            logging.debug('Login result: {0}/{1}'.format(
+                handle.headers, handle.read())
+            )
+            self.cookie_jar.clear(
+                self.config.api_domain, '/', 'SiteUser[login]'
+            )
+            self.cookie_jar.clear(
+                self.config.api_domain, '/', 'SiteUser[password]'
+            )
+        except urllib2.HTTPError, ex:
+            if ex.code == 403:
+                stderr.write('Bad login name or password!\n')
+            else:
+                stderr.write('Login error!\n')
+            logging.debug(
+                'HTTP error #{0}: {1}\n'.format(ex.code, ex.read())
+            )
+            exit(1)
+        except urllib2.URLError, ex:
+            stderr.write('Login error!\n')
+            logging.debug('URLError - {0}\n'.format(ex.reason))
+            exit(1)
+
         self.logged_ = True
 
     def load_shows(self):
