@@ -368,7 +368,7 @@ class MyShowsRu:
         else:
             last_watched = episodes[last_watched]['sequenceNumber']
 
-        episode_id = 0
+        episode_id = None
         first_unwatched = None
         for epi_id in episodes:
             next_episode = episodes[epi_id]
@@ -386,14 +386,15 @@ class MyShowsRu:
         show_id = self.id_by_title(self.title_by_alias(alias.lower()))
         epis = self.load_episodes(show_id)
         episode_id = self.get_first_unwatched(show_id)
-        episode = epis['episodes'][episode_id]
-        print
-        print 'First watch for {0} is s{1:02d}e{2:02d} ("{3}")'.format(
-                tr_out(epis['title']),
-                episode['seasonNumber'], episode['episodeNumber'],
-                tr_out(episode['title']),
-            )
-        print
+        if episode_id is None:
+            print "\nCannot find first watch for {0}\n".format(tr_out(epis['title']))
+        else:
+            episode = epis['episodes'][episode_id]
+            print '\nFirst watch for {0} is s{1:02d}e{2:02d} ("{3}")\n'.format(
+                    tr_out(epis['title']),
+                    episode['seasonNumber'], episode['episodeNumber'],
+                    tr_out(episode['title']),
+                )
 
     def set_episode_check(self, alias, epi, check):
         """ set epi episode as watched """
