@@ -30,8 +30,8 @@ class MyShowsRu:
         logging.info('Config file {0} loaded!'.format(config_name_name))
         self.cookie_jar = cookielib.CookieJar()
         self.opener = urllib2.build_opener(
-                urllib2.HTTPCookieProcessor(self.cookie_jar)
-            )
+            urllib2.HTTPCookieProcessor(self.cookie_jar)
+        )
         self.logged_ = False
         self.list_loaded_ = False
         self.api_url = 'http://' + self.config.api_domain
@@ -47,7 +47,7 @@ class MyShowsRu:
             req_data = urllib.urlencode({
                 'login': self.config.login.name,
                 'password': self.config.login.md5pass},
-                )
+            )
             logging.debug(
                 'Login url:{0}{1}{2}'.format(
                     self.api_url, self.config.url.login, req_data
@@ -119,15 +119,15 @@ class MyShowsRu:
                 alias = '-'
 
             print '{0}{1}({7}): {2}/{3} ({4}%), rating = {5}({6})'.format(
-                    show_sign,
-                    tr_out(next_show['title']),
-                    # next_show['ruTitle'],
-                    next_show['watchedEpisodes'], next_show['totalEpisodes'],
-                    100 * next_show['watchedEpisodes'] / next_show['totalEpisodes'],
-                    next_show['rating'],
-                    next_show['watchStatus'][0],
-                    alias
-                )
+                show_sign,
+                tr_out(next_show['title']),
+                # next_show['ruTitle'],
+                next_show['watchedEpisodes'], next_show['totalEpisodes'],
+                100 * next_show['watchedEpisodes'] / next_show['totalEpisodes'],
+                next_show['rating'],
+                next_show['watchStatus'][0],
+                alias
+            )
         print
 
     def list_show(self, alias):
@@ -167,11 +167,11 @@ class MyShowsRu:
                 if epi_id in watched:
                     comment = 'watched ' + watched[epi_id]['watchDate']
                 print '  "{0}" (s{1:02d}e{2:02d}) {3}'.format(
-                        tr_out(next_episode['title']),
-                        next_episode['seasonNumber'],
-                        next_episode['episodeNumber'],
-                        comment
-                    )
+                    tr_out(next_episode['title']),
+                    next_episode['seasonNumber'],
+                    next_episode['episodeNumber'],
+                    comment
+                )
 
     def list_shows(self, alias):
         """ list user shows """
@@ -224,7 +224,8 @@ class MyShowsRu:
             logging.debug(
                 'Load episodes: {0}{1}'.format(
                     self.api_url, self.config.url.list_episodes.format(show_id)
-            ))
+                )
+            )
             request = urllib2.Request(
                 self.api_url + self.config.url.list_episodes.format(show_id)
             )
@@ -241,7 +242,8 @@ class MyShowsRu:
             logging.debug(
                 'Load watched: {0}{1}'.format(
                     self.api_url, self.config.url.list_watched.format(show_id)
-            ))
+                )
+            )
             request = urllib2.Request(
                 self.api_url + self.config.url.list_watched.format(show_id)
             )
@@ -272,16 +274,16 @@ class MyShowsRu:
         watched = self.load_watched(show_id)
         episode_id = self.get_last_watched(show_id)
         print
-        if episode_id == None:
+        if episode_id is None:
             print '{0} is unwatched'.format(tr_out(epis['title']))
         else:
             episode = epis['episodes'][episode_id]
             print 'Last for {0} is s{1:02d}e{2:02d} ("{3}") at {4}'.format(
-                    tr_out(epis['title']),
-                    episode['seasonNumber'], episode['episodeNumber'],
-                    tr_out(episode['title']),
-                    watched[episode_id]['watchDate']
-                )
+                tr_out(epis['title']),
+                episode['seasonNumber'], episode['episodeNumber'],
+                tr_out(episode['title']),
+                watched[episode_id]['watchDate']
+            )
         print
 
     def show_last_watched_by_date(self, alias):
@@ -342,11 +344,11 @@ class MyShowsRu:
             for date_key in sorted(last_map.keys()):
                 episode = last_map[date_key]
                 print '{0} s{1:02d}e{2:02d} "{3}" at {4}'.format(
-                        tr_out(epis['title']),
-                        episode['seasonNumber'], episode['episodeNumber'],
-                        tr_out(episode['title']),
-                        watched[str(episode['id'])]['watchDate']
-                    )
+                    tr_out(epis['title']),
+                    episode['seasonNumber'], episode['episodeNumber'],
+                    tr_out(episode['title']),
+                    watched[str(episode['id'])]['watchDate']
+                )
         print
         print 'Total count: {0}'.format(count)
         print
@@ -363,7 +365,7 @@ class MyShowsRu:
         """ return first unwathced episode for show id """
         episodes = self.load_episodes(show_id)['episodes']
         last_watched = self.get_last_watched(show_id)
-        if last_watched == None:
+        if last_watched is None:
             last_watched = 0
         else:
             last_watched = episodes[last_watched]['sequenceNumber']
@@ -391,10 +393,10 @@ class MyShowsRu:
         else:
             episode = epis['episodes'][episode_id]
             print '\nFirst watch for {0} is s{1:02d}e{2:02d} ("{3}")\n'.format(
-                    tr_out(epis['title']),
-                    episode['seasonNumber'], episode['episodeNumber'],
-                    tr_out(episode['title']),
-                )
+                tr_out(epis['title']),
+                episode['seasonNumber'], episode['episodeNumber'],
+                tr_out(episode['title']),
+            )
 
     def set_episode_check(self, alias, epi, check):
         """ set epi episode as watched """
@@ -419,7 +421,7 @@ class MyShowsRu:
                         url = self.config.url.uncheck_episode.format(epi_id)
                         msg = 'unchecked'
                     logging.debug(
-                            'Set checked: {0}{1}'.format(self.api_url, url))
+                        'Set checked: {0}{1}'.format(self.api_url, url))
                     request = urllib2.Request(self.api_url + url)
                     self.opener.open(request)
                     print
@@ -440,7 +442,7 @@ class MyShowsRu:
             self.do_login()
         req_data = urllib.urlencode({
             'q': query,
-            })
+        })
         logging.debug(
             'Search url/data:{0}{1}{2}'.format(
                 self.api_url, self.config.url.search, req_data
@@ -461,7 +463,7 @@ class MyShowsRu:
         for show_id in search_result:
             show = search_result[show_id]
             print '"{1}", started: {2} (id={0})'.format(
-                    show_id, tr_out(show['title']), show['started']
+                show_id, tr_out(show['title']), show['started']
             )
         print
 
@@ -472,7 +474,7 @@ class MyShowsRu:
             show = search_result[show_id]
             url = self.config.url.status.format(show['id'], status)
             logging.debug(
-                    'Set show status: {0}{1}'.format(self.api_url, url))
+                'Set show status: {0}{1}'.format(self.api_url, url))
             request = urllib2.Request(self.api_url + url)
             self.opener.open(request)
             print
@@ -554,9 +556,11 @@ def main():
     )
     cmd_args = parser.parse_args()
 
-    logging.basicConfig(level=cmd_args.debug,
-            format='%(asctime)s %(levelname)s: %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S')
+    logging.basicConfig(
+        level=cmd_args.debug,
+        format='%(asctime)s %(levelname)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
     logging.debug('Parsed command line args: {0}'.format(cmd_args))
 
     myshows = MyShowsRu(cmd_args.config)
