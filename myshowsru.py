@@ -374,9 +374,11 @@ class MyShowsRu:
         first_unwatched = None
         for epi_id in episodes:
             next_episode = episodes[epi_id]
-            if (first_unwatched > next_episode['sequenceNumber']\
-                    or not first_unwatched)\
-                and last_watched < next_episode['sequenceNumber']:
+            if (
+                (first_unwatched > next_episode['sequenceNumber']
+                 or not first_unwatched)
+                and last_watched < next_episode['sequenceNumber']
+            ):
                 #
                 first_unwatched = next_episode['sequenceNumber']
                 episode_id = epi_id
@@ -412,8 +414,10 @@ class MyShowsRu:
             episodes = epis['episodes']
             for epi_id in episodes:
                 next_episode = episodes[epi_id]
-                if next_episode['seasonNumber'] == season\
-                  and next_episode['episodeNumber'] == episode:
+                if (
+                    next_episode['seasonNumber'] == season
+                    and next_episode['episodeNumber'] == episode
+                ):
                     if check:
                         url = self.config.url.check_episode.format(epi_id)
                         msg = 'checked'
