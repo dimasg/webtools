@@ -163,12 +163,16 @@ class MyShowsRu:
         else:
             self.list_show(alias)
 
-    def title_by_alias(self, alias):
+    def title_by_alias(self, alias, no_exit=False):
         """ return show id by alias """
         logging.debug('title_by_alias({0})'.format(alias))
         if alias not in self.config.alias:
-            print 'Unknown alias - {0}'.format(alias)
-            exit(1)
+            logging.debug('Unknown alias - "{0}"'.format(alias))
+            if no_exit:
+                return ''
+            else:
+                print 'Unknown alias - {0}'.format(alias)
+                exit(1)
         else:
             logging.debug(
                 'title_by_alias({0}) = {1}'.format(
@@ -455,7 +459,13 @@ class MyShowsRu:
 
     def set_show_status(self, alias, status):
         """ set show status """
-        search_result = self.search_show(self.title_by_alias(alias.lower()))
+        title = self.title_by_alias(alias.lower(), no_exit=True)
+
+        if not title:
+            print 'Cannot find alias "{0}", will try it as title!'.format(alias)
+            title = alias
+
+        search_result = self.search_show(title)
         for show_id in search_result:
             show = search_result[show_id]
             url = self.config.url.status.format(show['id'], status)
@@ -463,7 +473,6 @@ class MyShowsRu:
                 'Set show status: {0}{1}'.format(self.api_url, url))
             request = urllib2.Request(self.api_url + url)
             self.opener.open(request)
-            print
             print 'Show "{0}" status set to {1}'.format(
                 tr_out(show['title']), status
             )
