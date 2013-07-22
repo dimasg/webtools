@@ -9,6 +9,7 @@ import json
 import logging
 #import pprint
 import re
+from sys import stderr
 import urllib
 import urllib2
 
@@ -42,29 +43,44 @@ class MyShowsRu:
         """ authorization """
         if self.logged_:
             return
-        req_data = urllib.urlencode({
-            'login': self.config.login.name,
-            'password': self.config.login.md5pass},
-        )
-        logging.debug(
-            'Login url:{0}{1}{2}'.format(
-                self.api_url, self.config.url.login, req_data
+        try:
+            req_data = urllib.urlencode({
+                'login': self.config.login.name,
+                'password': self.config.login.md5pass},
             )
-        )
-        request = urllib2.Request(
-            self.api_url + self.config.url.login, req_data
-        )
-        # handle = urllib2.urlopen(request)
-        handle = self.opener.open(request)
-        logging.debug('Login result: {0}/{1}'.format(
-            handle.headers, handle.read())
-        )
-        self.cookie_jar.clear(
-            self.config.api_domain, '/', 'SiteUser[login]'
-        )
-        self.cookie_jar.clear(
-            self.config.api_domain, '/', 'SiteUser[password]'
-        )
+            logging.debug(
+                'Login url:{0}{1}{2}'.format(
+                    self.api_url, self.config.url.login, req_data
+                )
+            )
+            request = urllib2.Request(
+                self.api_url + self.config.url.login, req_data
+            )
+            # handle = urllib2.urlopen(request)
+            handle = self.opener.open(request)
+            logging.debug('Login result: {0}/{1}'.format(
+                handle.headers, handle.read())
+            )
+            self.cookie_jar.clear(
+                self.config.api_domain, '/', 'SiteUser[login]'
+            )
+            self.cookie_jar.clear(
+                self.config.api_domain, '/', 'SiteUser[password]'
+            )
+        except urllib2.HTTPError, ex:
+            if ex.code == 403:
+                stderr.write('Bad login name or password!\n')
+            else:
+                stderr.write('Login error!\n')
+            logging.debug(
+                'HTTP error #{0}: {1}\n'.format(ex.code, ex.read())
+            )
+            exit(1)
+        except urllib2.URLError, ex:
+            stderr.write('Login error!\n')
+            logging.debug('URLError - {0}\n'.format(ex.reason))
+            exit(1)
+
         self.logged_ = True
 
     def load_shows(self):
@@ -87,8 +103,9 @@ class MyShowsRu:
         """ list all user shows """
         self.load_shows()
         print
-        for show_id in sorted(self.shows_data,
-                              key=lambda show_id: self.shows_data[show_id]['title']):
+        for show_id in sorted(
+            self.shows_data, key=lambda show_id: self.shows_data[show_id]['title']
+        ):
             next_show = self.shows_data[show_id]
             if next_show['watchedEpisodes'] <= 0:
                 show_sign = '-'
@@ -357,7 +374,7 @@ class MyShowsRu:
         else:
             last_watched = episodes[last_watched]['sequenceNumber']
 
-        episode_id = 0
+        episode_id = None
         first_unwatched = None
         for epi_id in episodes:
             next_episode = episodes[epi_id]
@@ -377,14 +394,15 @@ class MyShowsRu:
         show_id = self.id_by_title(self.title_by_alias(alias.lower()))
         epis = self.load_episodes(show_id)
         episode_id = self.get_first_unwatched(show_id)
-        episode = epis['episodes'][episode_id]
-        print
-        print 'First watch for {0} is s{1:02d}e{2:02d} ("{3}")'.format(
-            tr_out(epis['title']),
-            episode['seasonNumber'], episode['episodeNumber'],
-            tr_out(episode['title']),
-        )
-        print
+        if episode_id is None:
+            print "\nCannot find first watch for {0}\n".format(tr_out(epis['title']))
+        else:
+            episode = epis['episodes'][episode_id]
+            print '\nFirst watch for {0} is s{1:02d}e{2:02d} ("{3}")\n'.format(
+                tr_out(epis['title']),
+                episode['seasonNumber'], episode['episodeNumber'],
+                tr_out(episode['title']),
+            )
 
     def set_episode_check(self, alias, epi, check):
         """ set epi episode as watched """
