@@ -429,7 +429,7 @@ function doMakeTemplateFromGallery2(url,htmldoc,from_idx,to_idx,n_idx,border,nl_
                             var next_img = img_idx_text+img_idx+'. '+desc+nl_tag+'\n<img src="'+full_src+'"'+alt+' width="'+full_img.width+'" height="'+full_img.height+'" '+border+'>'+nl_tag+nl_tag+'\n\n';
                             result += next_img;
                         }
-                        document.getElementById('result').value += result;
+                        document.getElementById('result').value += next_img;
                     }
                 );
             }
