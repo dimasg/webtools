@@ -400,12 +400,13 @@ function doMakeTemplateFromGallery2(url,htmldoc,from_idx,to_idx,n_idx,border,nl_
                 var link_url = link.href;
                 if ( link_url[0] == '/' ) { link_url = root_url+link_url; }
                   //
-                $.get( url,
+                $.get( link_url,
                     function(res) {
+                        var text = res.responseText;
                         var linkhtmldoc = createHTMLDocumentByString(res.responseText);
                         var full_img = linkhtmldoc.evaluate('//div[@id="photo"]/img',linkhtmldoc,null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue;
                         if ( !full_img ) {
-                            result = "ошибка получения адреса полного изображения из страницы " + link_url;
+                            result = "\nошибка получения адреса полного изображения из страницы " + link_url + "\n";
                         } else {
                             var full_src = full_img.src;
                             if ( full_src[0] == '/' ) { full_src = root_url + full_src; }
