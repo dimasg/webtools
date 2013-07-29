@@ -132,14 +132,14 @@ class MyShowsRu:
 
     def list_show(self, alias):
         """ list user show by alias """
-        re_m = re.match('(\D+)(\d{1,2})?', alias.lower())
+        re_m = re.match('(\D+)(\d{1,2})?', alias)
         if not re_m:
             print 'Bad format for list - "{0}"'.format(alias)
         else:
             season = -1
             if re_m.lastindex == 2:
                 season = int(re_m.group(2))
-            show_id = self.id_by_title(self.title_by_alias(re_m.group(1)))
+            show_id = self.id_by_title(self.title_by_alias(re_m.group(1), no_exit=True))
 
             epis = self.load_episodes(show_id)
             episodes = epis['episodes']
@@ -180,20 +180,22 @@ class MyShowsRu:
         else:
             self.list_show(alias)
 
-    def title_by_alias(self, alias, no_exit=False):
+    def title_by_alias(self, query, no_exit=False):
         """ return show id by alias """
-        logging.debug('title_by_alias({0})'.format(alias))
+        logging.debug('title_by_alias({0})'.format(query))
+        alias = query.lower()
         if alias not in self.config.alias:
             logging.debug('Unknown alias - "{0}"'.format(alias))
             if no_exit:
-                return ''
+                print 'Cannot find alias "{0}", will try it as title!'.format(query)
+                return query
             else:
-                print 'Unknown alias - {0}'.format(alias)
+                print 'Unknown alias - {0}'.format(query)
                 exit(1)
         else:
             logging.debug(
                 'title_by_alias({0}) = {1}'.format(
-                    alias, self.config.alias[alias]
+                    query, self.config.alias[alias]
                 ))
             return self.config.alias[alias]
 
@@ -214,11 +216,13 @@ class MyShowsRu:
 
         for show_id in self.shows_data:
             next_show = self.shows_data[show_id]
+            logging.debug('id_by_title({0}) = {1}'.format(next_show['title'], show_id))
             if next_show['title'] == title:
-                logging.debug('id_by_title({0}) = {1}'.format(title, show_id))
+                logging.debug('Found id_by_title({0}) = {1}'.format(title, show_id))
                 return show_id
 
-        return None
+        print 'Unknown title - {0}'.format(title)
+        exit(1)
 
     def load_episodes(self, show_id):
         """ load episode data by show id """
@@ -273,7 +277,7 @@ class MyShowsRu:
 
     def show_last_watched_by_alias(self, alias):
         """ show last watched episode for alias """
-        show_id = self.id_by_title(self.title_by_alias(alias))
+        show_id = self.id_by_title(self.title_by_alias(alias, no_exit=True))
         epis = self.load_episodes(show_id)
         watched = self.load_watched(show_id)
         episode_id = self.get_last_watched(show_id)
@@ -357,13 +361,13 @@ class MyShowsRu:
         print 'Total count: {0}'.format(count)
         print
 
-    def show_last_watched(self, alias):
+    def show_last_watched(self, query):
         """ show last watched episode(s) """
-        alias = alias.lower()
+        alias = query.lower()
         if alias in ['day', 'week', 'month']:
             self.show_last_watched_by_date(alias)
         else:
-            self.show_last_watched_by_alias(alias)
+            self.show_last_watched_by_alias(query)
 
     def get_first_unwatched(self, show_id):
         """ return first unwathced episode for show id """
@@ -391,7 +395,7 @@ class MyShowsRu:
 
     def show_next_for_watch(self, alias):
         """ show next episode for watch for alias """
-        show_id = self.id_by_title(self.title_by_alias(alias.lower()))
+        show_id = self.id_by_title(self.title_by_alias(alias, no_exit=True))
         epis = self.load_episodes(show_id)
         episode_id = self.get_first_unwatched(show_id)
         if episode_id is None:
@@ -413,7 +417,7 @@ class MyShowsRu:
             season = int(re_m.group(1))
             episode = int(re_m.group(2))
             epis = self.load_episodes(
-                self.id_by_title(self.title_by_alias(alias))
+                self.id_by_title(self.title_by_alias(alias, no_exit=True))
             )
             episodes = epis['episodes']
             for epi_id in episodes:
@@ -477,11 +481,7 @@ class MyShowsRu:
 
     def set_show_status(self, alias, status):
         """ set show status """
-        title = self.title_by_alias(alias.lower(), no_exit=True)
-
-        if not title:
-            print 'Cannot find alias "{0}", will try it as title!'.format(alias)
-            title = alias
+        title = self.title_by_alias(alias, no_exit=True)
 
         search_result = self.search_show(title)
         for show_id in search_result:
