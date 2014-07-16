@@ -22,7 +22,7 @@ def tr_out(from_str):
 #    return from_str.replace(u'\u2026', '...')
 
 
-class MyShowsRu:
+class MyShowsRu(object):
     """ work with api.myshows.ru """
     def __init__(self, config_name_name):
         cfg_file = file(config_name_name)
@@ -46,8 +46,8 @@ class MyShowsRu:
         try:
             req_data = urllib.urlencode({
                 'login': self.config.login.name,
-                'password': self.config.login.md5pass},
-            )
+                'password': self.config.login.md5pass
+            })
             logging.debug(
                 'Login url:{0}{1}{2}'.format(
                     self.api_url, self.config.url.login, req_data
@@ -59,8 +59,8 @@ class MyShowsRu:
             # handle = urllib2.urlopen(request)
             handle = self.opener.open(request)
             logging.debug('Login result: {0}/{1}'.format(
-                handle.headers, handle.read())
-            )
+                handle.headers, handle.read()
+            ))
             self.cookie_jar.clear(
                 self.config.api_domain, '/', 'SiteUser[login]'
             )
@@ -132,15 +132,16 @@ class MyShowsRu:
 
     def list_show(self, alias):
         """ list user show by alias """
-        re_m = re.match('(\D+)(\d{1,2})?', alias)
+        re_m = re.match(r'(\D+)(\d{1,2})?', alias)
         if not re_m:
             print 'Bad format for list - "{0}"'.format(alias)
         else:
             season = -1
             if re_m.lastindex == 2:
                 season = int(re_m.group(2))
-            show_id = self.id_by_title(self.title_by_alias(re_m.group(1), no_exit=True))
-
+            show_id = self.id_by_title(
+                self.title_by_alias(re_m.group(1), no_exit=True)
+            )
             epis = self.load_episodes(show_id)
             episodes = epis['episodes']
             list_map = {}
@@ -315,7 +316,7 @@ class MyShowsRu:
             date_to.strftime('%Y-%m-%d')
         )
         print
-        re_c = re.compile('(\d{1,2})\.(\d{1,2})\.(\d{4})')
+        re_c = re.compile(r'(\d{1,2})\.(\d{1,2})\.(\d{4})')
         count = 0
         for show_id in self.shows_data:
             next_show = self.shows_data[show_id]
@@ -384,7 +385,7 @@ class MyShowsRu:
             next_episode = episodes[epi_id]
             if (
                 (first_unwatched > next_episode['sequenceNumber']
-                 or not first_unwatched)
+                or not first_unwatched)
                 and last_watched < next_episode['sequenceNumber']
             ):
                 #
@@ -410,7 +411,7 @@ class MyShowsRu:
 
     def set_episode_check(self, alias, epi, check):
         """ set epi episode as watched """
-        re_m = re.match('s(\d{1,2})e(\d{1,2})', epi.lower())
+        re_m = re.match(r's(\d{1,2})e(\d{1,2})', epi.lower())
         if not re_m:
             print 'Bad format for check - "{0}"'.format(epi)
         else:
