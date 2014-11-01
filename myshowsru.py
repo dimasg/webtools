@@ -202,7 +202,6 @@ class MyShowsRu:
                 'title_by_alias({0}) = {1}'.format(
                     query, self.config.alias[alias]
                 ))
-            print(self.config.alias[alias])
             return self.config.alias[alias]
 
     def alias_by_title(self, title):
