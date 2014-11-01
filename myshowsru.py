@@ -2,8 +2,12 @@
 # -*- coding: utf-8 -*-
 """ myshows.ru utility """
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+
 import argparse
-import cookielib
 import datetime
 import json
 import logging
@@ -11,7 +15,13 @@ import logging
 import re
 from sys import stderr
 import urllib
-import urllib2
+
+try:
+    from http.cookiejar import CookieJar
+    from urllib.request import build_opener
+except ImportError:
+    from cookielib import CookieJar
+    from urllib2 import build_opener, HTTPCookieProcessor, HTTPError, Request, URLError
 
 import config
 
@@ -28,9 +38,10 @@ class MyShowsRu(object):
         cfg_file = file(config_name_name)
         self.config = config.Config(cfg_file)
         logging.info('Config file {0} loaded!'.format(config_name_name))
-        self.cookie_jar = cookielib.CookieJar()
-        self.opener = urllib2.build_opener(
-            urllib2.HTTPCookieProcessor(self.cookie_jar)
+
+        self.cookie_jar = CookieJar()
+        self.opener = build_opener(
+            HTTPCookieProcessor(self.cookie_jar)
         )
         self.logged_ = False
         self.list_loaded_ = False
@@ -53,10 +64,9 @@ class MyShowsRu(object):
                     self.api_url, self.config.url.login, req_data
                 )
             )
-            request = urllib2.Request(
+            request = Request(
                 self.api_url + self.config.url.login, req_data
             )
-            # handle = urllib2.urlopen(request)
             handle = self.opener.open(request)
             logging.debug('Login result: {0}/{1}'.format(
                 handle.headers, handle.read()
@@ -67,7 +77,7 @@ class MyShowsRu(object):
             self.cookie_jar.clear(
                 self.config.api_domain, '/', 'SiteUser[password]'
             )
-        except urllib2.HTTPError as ex:
+        except HTTPError as ex:
             if ex.code == 403:
                 stderr.write('Bad login name or password!\n')
             else:
@@ -76,7 +86,7 @@ class MyShowsRu(object):
                 'HTTP error #{0}: {1}\n'.format(ex.code, ex.read())
             )
             exit(1)
-        except urllib2.URLError as ex:
+        except URLError as ex:
             stderr.write('Login error!\n')
             logging.debug('URLError - {0}\n'.format(ex.reason))
             exit(1)
@@ -92,7 +102,7 @@ class MyShowsRu(object):
         logging.debug(
             'Login: {0}{1}'.format(self.api_url, self.config.url.list_shows)
         )
-        request = urllib2.Request(
+        request = Request(
             self.api_url + self.config.url.list_shows
         )
         handle = self.opener.open(request)
@@ -235,7 +245,7 @@ class MyShowsRu(object):
                     self.api_url, self.config.url.list_episodes.format(show_id)
                 )
             )
-            request = urllib2.Request(
+            request = Request(
                 self.api_url + self.config.url.list_episodes.format(show_id)
             )
             handle = self.opener.open(request)
@@ -253,7 +263,7 @@ class MyShowsRu(object):
                     self.api_url, self.config.url.list_watched.format(show_id)
                 )
             )
-            request = urllib2.Request(
+            request = Request(
                 self.api_url + self.config.url.list_watched.format(show_id)
             )
             handle = self.opener.open(request)
@@ -435,7 +445,7 @@ class MyShowsRu(object):
                         msg = 'unchecked'
                     logging.debug(
                         'Set checked: {0}{1}'.format(self.api_url, url))
-                    request = urllib2.Request(self.api_url + url)
+                    request = Request(self.api_url + url)
                     self.opener.open(request)
                     print()
                     print(
@@ -461,7 +471,7 @@ class MyShowsRu(object):
                 self.api_url, self.config.url.search, req_data
             )
         )
-        request = urllib2.Request(
+        request = Request(
             self.api_url + self.config.url.search, req_data
         )
         handle = self.opener.open(request)
@@ -490,7 +500,7 @@ class MyShowsRu(object):
             url = self.config.url.status.format(show['id'], status)
             logging.debug(
                 'Set show status: {0}{1}'.format(self.api_url, url))
-            request = urllib2.Request(self.api_url + url)
+            request = Request(self.api_url + url)
             self.opener.open(request)
             print('Show "{0}" status set to {1}'.format(
                 tr_out(show['title']), status
