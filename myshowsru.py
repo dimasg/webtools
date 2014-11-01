@@ -67,7 +67,7 @@ class MyShowsRu(object):
             self.cookie_jar.clear(
                 self.config.api_domain, '/', 'SiteUser[password]'
             )
-        except urllib2.HTTPError, ex:
+        except urllib2.HTTPError as ex:
             if ex.code == 403:
                 stderr.write('Bad login name or password!\n')
             else:
@@ -76,7 +76,7 @@ class MyShowsRu(object):
                 'HTTP error #{0}: {1}\n'.format(ex.code, ex.read())
             )
             exit(1)
-        except urllib2.URLError, ex:
+        except urllib2.URLError as ex:
             stderr.write('Login error!\n')
             logging.debug('URLError - {0}\n'.format(ex.reason))
             exit(1)
@@ -102,7 +102,7 @@ class MyShowsRu(object):
     def list_all_shows(self):
         """ list all user shows """
         self.load_shows()
-        print
+        print()
         for show_id in sorted(
             self.shows_data, key=lambda show_id: self.shows_data[show_id]['title']
         ):
@@ -118,7 +118,7 @@ class MyShowsRu(object):
             if not alias:
                 alias = '-'
 
-            print '{0}{1}({7}): {2}/{3} ({4}%), rating = {5}({6})'.format(
+            print('{0}{1}({7}): {2}/{3} ({4}%), rating = {5}({6})'.format(
                 show_sign,
                 tr_out(next_show['title']),
                 # next_show['ruTitle'],
@@ -127,14 +127,14 @@ class MyShowsRu(object):
                 next_show['rating'],
                 next_show['watchStatus'][0],
                 alias
-            )
-        print
+            ))
+        print()
 
     def list_show(self, alias):
         """ list user show by alias """
         re_m = re.match(r'(\D+)(\d{1,2})?', alias)
         if not re_m:
-            print 'Bad format for list - "{0}"'.format(alias)
+            print('Bad format for list - "{0}"'.format(alias))
         else:
             season = -1
             if re_m.lastindex == 2:
@@ -160,19 +160,19 @@ class MyShowsRu(object):
                 next_season = next_episode['seasonNumber']
                 if current_season != next_season:
                     current_season = next_season
-                    print '{0} Season {1}:'.format(
+                    print('{0} Season {1}:'.format(
                         tr_out(epis['title']), current_season
-                    )
+                    ))
                 comment = ''
                 epi_id = str(next_episode['id'])
                 if epi_id in watched:
                     comment = 'watched ' + watched[epi_id]['watchDate']
-                print '  "{0}" (s{1:02d}e{2:02d}) {3}'.format(
+                print('  "{0}" (s{1:02d}e{2:02d}) {3}'.format(
                     tr_out(next_episode['title']),
                     next_episode['seasonNumber'],
                     next_episode['episodeNumber'],
                     comment
-                )
+                ))
 
     def list_shows(self, alias):
         """ list user shows """
@@ -188,10 +188,10 @@ class MyShowsRu(object):
         if alias not in self.config.alias:
             logging.debug('Unknown alias - "{0}"'.format(alias))
             if no_exit:
-                print 'Cannot find alias "{0}", will try it as title!'.format(query)
+                print('Cannot find alias "{0}", will try it as title!'.format(query))
                 return query
             else:
-                print 'Unknown alias - {0}'.format(query)
+                print('Unknown alias - {0}'.format(query))
                 exit(1)
         else:
             logging.debug(
@@ -222,7 +222,7 @@ class MyShowsRu(object):
                 logging.debug('Found id_by_title({0}) = {1}'.format(title, show_id))
                 return show_id
 
-        print 'Unknown title - {0}'.format(title)
+        print('Unknown title - {0}'.format(title))
         exit(1)
 
     def load_episodes(self, show_id):
@@ -282,18 +282,18 @@ class MyShowsRu(object):
         epis = self.load_episodes(show_id)
         watched = self.load_watched(show_id)
         episode_id = self.get_last_watched(show_id)
-        print
+        print()
         if episode_id is None:
-            print '{0} is unwatched'.format(tr_out(epis['title']))
+            print('{0} is unwatched'.format(tr_out(epis['title'])))
         else:
             episode = epis['episodes'][episode_id]
-            print 'Last for {0} is s{1:02d}e{2:02d} ("{3}") at {4}'.format(
+            print('Last for {0} is s{1:02d}e{2:02d} ("{3}") at {4}'.format(
                 tr_out(epis['title']),
                 episode['seasonNumber'], episode['episodeNumber'],
                 tr_out(episode['title']),
                 watched[episode_id]['watchDate']
-            )
-        print
+            ))
+        print()
 
     def show_last_watched_by_date(self, alias):
         """ show last watched episode(s) for date """
@@ -306,16 +306,16 @@ class MyShowsRu(object):
             prev_month = date_to.replace(day=1) + datetime.timedelta(days=-1)
             date_from = date_to + datetime.timedelta(days=-prev_month.day)
         else:
-            print 'Unknown alias - {0}'.format(alias)
+            print('Unknown alias - {0}'.format(alias))
             exit(1)
 
         self.load_shows()
-        print
-        print 'Watched from {0} to {1}'.format(
+        print()
+        print('Watched from {0} to {1}'.format(
             date_from.strftime('%Y-%m-%d'),
             date_to.strftime('%Y-%m-%d')
-        )
-        print
+        ))
+        print()
         re_c = re.compile(r'(\d{1,2})\.(\d{1,2})\.(\d{4})')
         count = 0
         for show_id in self.shows_data:
@@ -329,8 +329,8 @@ class MyShowsRu(object):
                 next_episode = watched[epi_id]
                 re_m = re_c.match(next_episode['watchDate'])
                 if not re_m:
-                    print 'Warning: unknown date format - {0}'.format(
-                        next_episode['watchDate'])
+                    print('Warning: unknown date format - {0}'.format(
+                        next_episode['watchDate']))
                     continue
                 dtv = [int(s) for s in re_m.group(3, 2, 1)]
                 epi_date = datetime.date(dtv[0], dtv[1], dtv[2])
@@ -339,7 +339,7 @@ class MyShowsRu(object):
                         epis = self.load_episodes(show_id)
                     count += 1
                     if epi_id not in epis['episodes']:
-                        print 'Episode not found: {0}'.format(epi_id)
+                        print('Episode not found: {0}'.format(epi_id))
                         logging.debug('Episodes:')
                         logging.debug(epis)
                         continue
@@ -352,15 +352,15 @@ class MyShowsRu(object):
 
             for date_key in sorted(last_map.keys()):
                 episode = last_map[date_key]
-                print '{0} s{1:02d}e{2:02d} "{3}" at {4}'.format(
+                print('{0} s{1:02d}e{2:02d} "{3}" at {4}'.format(
                     tr_out(epis['title']),
                     episode['seasonNumber'], episode['episodeNumber'],
                     tr_out(episode['title']),
                     watched[str(episode['id'])]['watchDate']
-                )
-        print
-        print 'Total count: {0}'.format(count)
-        print
+                ))
+        print()
+        print('Total count: {0}'.format(count))
+        print()
 
     def show_last_watched(self, query):
         """ show last watched episode(s) """
@@ -400,20 +400,20 @@ class MyShowsRu(object):
         epis = self.load_episodes(show_id)
         episode_id = self.get_first_unwatched(show_id)
         if episode_id is None:
-            print "\nCannot find first watch for {0}\n".format(tr_out(epis['title']))
+            print("\nCannot find first watch for {0}\n".format(tr_out(epis['title'])))
         else:
             episode = epis['episodes'][episode_id]
-            print '\nFirst watch for {0} is s{1:02d}e{2:02d} ("{3}")\n'.format(
+            print('\nFirst watch for {0} is s{1:02d}e{2:02d} ("{3}")\n'.format(
                 tr_out(epis['title']),
                 episode['seasonNumber'], episode['episodeNumber'],
                 tr_out(episode['title']),
-            )
+            ))
 
     def set_episode_check(self, alias, epi, check):
         """ set epi episode as watched """
         re_m = re.match(r's(\d{1,2})e(\d{1,2})', epi.lower())
         if not re_m:
-            print 'Bad format for check - "{0}"'.format(epi)
+            print('Bad format for check - "{0}"'.format(epi))
         else:
             season = int(re_m.group(1))
             episode = int(re_m.group(2))
@@ -437,8 +437,8 @@ class MyShowsRu(object):
                         'Set checked: {0}{1}'.format(self.api_url, url))
                     request = urllib2.Request(self.api_url + url)
                     self.opener.open(request)
-                    print
-                    print \
+                    print()
+                    print(
                         'Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" set {4}'\
                         .format(
                             tr_out(next_episode['title']),
@@ -446,7 +446,7 @@ class MyShowsRu(object):
                             next_episode['episodeNumber'],
                             tr_out(epis['title']),
                             msg
-                        )
+                        ))
                     break
 
     def search_show(self, query):
@@ -472,13 +472,13 @@ class MyShowsRu(object):
     def show_search_result(self, query):
         """ show search result """
         search_result = self.search_show(query)
-        print
+        print()
         for show_id in search_result:
             show = search_result[show_id]
-            print '"{1}", started: {2} (id={0})'.format(
+            print('"{1}", started: {2} (id={0})'.format(
                 show_id, tr_out(show['title']), show['started']
-            )
-        print
+            ))
+        print()
 
     def set_show_status(self, alias, status):
         """ set show status """
@@ -492,10 +492,10 @@ class MyShowsRu(object):
                 'Set show status: {0}{1}'.format(self.api_url, url))
             request = urllib2.Request(self.api_url + url)
             self.opener.open(request)
-            print 'Show "{0}" status set to {1}'.format(
+            print('Show "{0}" status set to {1}'.format(
                 tr_out(show['title']), status
-            )
-            print
+            ))
+            print()
 
 
 def main():
