@@ -28,7 +28,7 @@ import config
 
 def tr_out(from_str):
     """ translate unshowed symbols """
-    return from_str.encode('utf-8')
+    return from_str.encode('utf-8').decode('ascii', 'ignore')
 #    return from_str.replace(u'\u2026', '...')
 
 
