@@ -142,7 +142,7 @@ class MyShowsRu(object):
 
     def list_show(self, alias):
         """ list user show by alias """
-        re_m = re.match(r'(\D+)(\d{1,2})?', alias)
+        re_m = re.match(r'^(.*\D)(\d{1,2}){0,1}$', alias)
         if not re_m:
             print('Bad format for list - "{0}"'.format(alias))
         else:
