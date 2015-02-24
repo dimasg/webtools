@@ -427,9 +427,9 @@ class MyShowsRu(object):
         else:
             season = int(re_m.group(1))
             episode = int(re_m.group(2))
-            epis = self.load_episodes(
-                self.id_by_title(self.title_by_alias(alias, no_exit=True))
-            )
+            show_id = self.id_by_title(self.title_by_alias(alias, no_exit=True))
+            epis = self.load_episodes(show_id)
+            watched = self.load_watched(show_id)
             episodes = epis['episodes']
             for epi_id in episodes:
                 next_episode = episodes[epi_id]
@@ -437,26 +437,47 @@ class MyShowsRu(object):
                     next_episode['seasonNumber'] == season
                     and next_episode['episodeNumber'] == episode
                 ):
+                    valid_op = False
+                    old_date = ''
                     if check:
-                        url = self.config.url.check_episode.format(epi_id)
                         msg = 'checked'
+                        if epi_id in watched:
+                            old_date = watched[epi_id]['watchDate']
+                        else:
+                            url = self.config.url.check_episode.format(epi_id)
+                            valid_op = True
                     else:
-                        url = self.config.url.uncheck_episode.format(epi_id)
                         msg = 'unchecked'
-                    logging.debug(
-                        'Set checked: {0}{1}'.format(self.api_url, url))
-                    request = Request(self.api_url + url)
-                    self.opener.open(request)
-                    print()
-                    print(
-                        'Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" set {4}'\
-                        .format(
-                            tr_out(next_episode['title']),
-                            next_episode['seasonNumber'],
-                            next_episode['episodeNumber'],
-                            tr_out(epis['title']),
-                            msg
-                        ))
+                        if epi_id in watched:
+                            url = self.config.url.uncheck_episode.format(epi_id)
+                            valid_op = True
+
+                    if not valid_op:
+                        print()
+                        print('Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" already {4} {5}'\
+                             .format(
+                                 tr_out(next_episode['title']),
+                                 next_episode['seasonNumber'],
+                                 next_episode['episodeNumber'],
+                                 tr_out(epis['title']),
+                                 msg,
+                                 old_date
+                             ))
+                    else:
+                        logging.debug(
+                            'Set checked: {0}{1}'.format(self.api_url, url))
+                        request = Request(self.api_url + url)
+                        self.opener.open(request)
+                        print()
+                        print(
+                            'Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" set {4}'\
+                            .format(
+                                tr_out(next_episode['title']),
+                                next_episode['seasonNumber'],
+                                next_episode['episodeNumber'],
+                                tr_out(epis['title']),
+                                msg
+                            ))
                     break
 
     def search_show(self, query):
