@@ -37,7 +37,7 @@ class MyShowsRu(object):
     def __init__(self, config_name_name):
         cfg_file = file(config_name_name)
         self.config = config.Config(cfg_file)
-        logging.info('Config file {0} loaded!'.format(config_name_name))
+        logging.info('Config file %s loaded!', config_name_name)
 
         self.cookie_jar = CookieJar()
         self.opener = build_opener(
@@ -60,17 +60,13 @@ class MyShowsRu(object):
                 'password': self.config.login.md5pass
             })
             logging.debug(
-                'Login url:{0}{1}{2}'.format(
-                    self.api_url, self.config.url.login, req_data
-                )
+                'Login, url: %s%s, data: %s', self.api_url, self.config.url.login, req_data
             )
             request = Request(
                 self.api_url + self.config.url.login, req_data
             )
             handle = self.opener.open(request)
-            logging.debug('Login result: {0}/{1}'.format(
-                handle.headers, handle.read()
-            ))
+            logging.debug('Login result: %s/%s', handle.headers, handle.read())
             self.cookie_jar.clear(
                 self.config.api_domain, '/', 'SiteUser[login]'
             )
@@ -82,13 +78,11 @@ class MyShowsRu(object):
                 stderr.write('Bad login name or password!\n')
             else:
                 stderr.write('Login error!\n')
-            logging.debug(
-                'HTTP error #{0}: {1}\n'.format(ex.code, ex.read())
-            )
+            logging.debug('HTTP error #%s: %s\n', ex.code, ex.read())
             exit(1)
         except URLError as ex:
             stderr.write('Login error!\n')
-            logging.debug('URLError - {0}\n'.format(ex.reason))
+            logging.debug('URLError - %s\n', ex.reason)
             exit(1)
 
         self.logged_ = True
@@ -99,9 +93,7 @@ class MyShowsRu(object):
             return
         if not self.logged_:
             self.do_login()
-        logging.debug(
-            'Login: {0}{1}'.format(self.api_url, self.config.url.list_shows)
-        )
+        logging.debug('Login: %s%s', self.api_url, self.config.url.list_shows)
         request = Request(
             self.api_url + self.config.url.list_shows
         )
@@ -193,10 +185,10 @@ class MyShowsRu(object):
 
     def title_by_alias(self, query, no_exit=False):
         """ return show id by alias """
-        logging.debug('title_by_alias({0})'.format(query))
+        logging.debug('title_by_alias(%s)', query)
         alias = query.lower()
         if alias not in self.config.alias:
-            logging.debug('Unknown alias - "{0}"'.format(alias))
+            logging.debug('Unknown alias - "%s"', alias)
             if no_exit:
                 print('Cannot find alias "{0}", will try it as title!'.format(query))
                 return query
@@ -204,15 +196,12 @@ class MyShowsRu(object):
                 print('Unknown alias - {0}'.format(query))
                 exit(1)
         else:
-            logging.debug(
-                'title_by_alias({0}) = {1}'.format(
-                    query, self.config.alias[alias]
-                ))
+            logging.debug('title_by_alias(%s) = %s', query, self.config.alias[alias])
             return self.config.alias[alias]
 
     def alias_by_title(self, title):
         """ return show alias by title """
-        logging.debug('alias_by_title({0})'.format(title))
+        logging.debug('alias_by_title(%s)', title)
         for alias, a_title in self.config.alias.iteritems():
             if a_title == title:
                 return alias
@@ -221,15 +210,15 @@ class MyShowsRu(object):
 
     def id_by_title(self, title):
         """ return show id by title """
-        logging.debug('id_by_title({0})'.format(title))
+        logging.debug('id_by_title(%s)', title)
         if not self.list_loaded_:
             self.load_shows()
 
         for show_id in self.shows_data:
             next_show = self.shows_data[show_id]
-            logging.debug('id_by_title({0}) = {1}'.format(next_show['title'], show_id))
+            logging.debug('id_by_title(%s) = %s', next_show['title'], show_id)
             if next_show['title'] == title:
-                logging.debug('Found id_by_title({0}) = {1}'.format(title, show_id))
+                logging.debug('Found id_by_title(%s) = %s', title, show_id)
                 return show_id
 
         print('Unknown title - {0}'.format(title))
@@ -241,9 +230,8 @@ class MyShowsRu(object):
             self.do_login()
         if show_id not in self.episodes_data:
             logging.debug(
-                'Load episodes: {0}{1}'.format(
-                    self.api_url, self.config.url.list_episodes.format(show_id)
-                )
+                'Load episodes: %s%s',
+                self.api_url, self.config.url.list_episodes.format(show_id)
             )
             request = Request(
                 self.api_url + self.config.url.list_episodes.format(show_id)
@@ -259,9 +247,8 @@ class MyShowsRu(object):
             self.do_login()
         if show_id not in self.watched_data:
             logging.debug(
-                'Load watched: {0}{1}'.format(
-                    self.api_url, self.config.url.list_watched.format(show_id)
-                )
+                'Load watched: %s%s',
+                self.api_url, self.config.url.list_watched.format(show_id)
             )
             request = Request(
                 self.api_url + self.config.url.list_watched.format(show_id)
@@ -464,8 +451,7 @@ class MyShowsRu(object):
                                  old_date
                              ))
                     else:
-                        logging.debug(
-                            'Set checked: {0}{1}'.format(self.api_url, url))
+                        logging.debug('Set checked: %s%s', self.api_url, url)
                         request = Request(self.api_url + url)
                         self.opener.open(request)
                         print()
@@ -488,16 +474,15 @@ class MyShowsRu(object):
             'q': query,
         })
         logging.debug(
-            'Search url/data:{0}{1}{2}'.format(
-                self.api_url, self.config.url.search, req_data
-            )
+            'Search url/data: %s%s%s',
+            self.api_url, self.config.url.search, req_data
         )
         request = Request(
             self.api_url + self.config.url.search, req_data
         )
         handle = self.opener.open(request)
         search_result = json.loads(handle.read())
-        logging.debug('Search result: {0}'.format(search_result))
+        logging.debug('Search result: %s', search_result)
         return search_result
 
     def show_search_result(self, query):
@@ -519,8 +504,7 @@ class MyShowsRu(object):
         for show_id in search_result:
             show = search_result[show_id]
             url = self.config.url.status.format(show['id'], status)
-            logging.debug(
-                'Set show status: {0}{1}'.format(self.api_url, url))
+            logging.debug('Set show status: %s%s', self.api_url, url)
             request = Request(self.api_url + url)
             self.opener.open(request)
             print('Show "{0}" status set to {1}'.format(
@@ -606,7 +590,7 @@ def main():
         format='%(asctime)s %(levelname)s: %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-    logging.debug('Parsed command line args: {0}'.format(cmd_args))
+    logging.debug('Parsed command line args: %s', cmd_args)
 
     myshows = MyShowsRu(cmd_args.config)
 
