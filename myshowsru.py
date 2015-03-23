@@ -259,7 +259,8 @@ class MyShowsRu(object):
         return self.watched_data[show_id]
 
     def get_last_watched(self, show_id):
-        """ return last watched episode for show id """
+        """ return last watched episode id for show id """
+        logging.debug('Searching last watched for show %s', show_id)
         episodes = self.load_episodes(show_id)['episodes']
         watched = self.load_watched(show_id)
 
@@ -267,9 +268,19 @@ class MyShowsRu(object):
         episode_id = None
         for epi_id in watched:
             next_episode = episodes[epi_id]
+            logging.debug(
+                'Trying next episode: %s - %s',
+                next_episode['shortName'], next_episode['title']
+            )
             if last_number < next_episode['sequenceNumber']:
                 last_number = next_episode['sequenceNumber']
                 episode_id = epi_id
+                logging.debug(
+                    'Saved next last episode: %s - %s',
+                    next_episode['shortName'], next_episode['title']
+                )
+
+        logging.debug('Found last watched %s', episode_id)
 
         return episode_id
 
@@ -369,17 +380,30 @@ class MyShowsRu(object):
 
     def get_first_unwatched(self, show_id):
         """ return first unwathced episode for show id """
+        logging.debug('Searching first unwatched for show %s', show_id)
         episodes = self.load_episodes(show_id)['episodes']
         last_watched = self.get_last_watched(show_id)
         if last_watched is None:
             last_watched = 0
         else:
+            logging.debug(
+                'Last watched is: %s - %s (%s)',
+                episodes[last_watched]['shortName'], episodes[last_watched]['title'],
+                episodes[last_watched]['sequenceNumber']
+            )
             last_watched = episodes[last_watched]['sequenceNumber']
+
+        logging.debug('Last watched: %s', last_watched)
 
         episode_id = None
         first_unwatched = None
         for epi_id in episodes:
             next_episode = episodes[epi_id]
+            logging.debug(
+                'Trying next episode: %s - %s (%s)',
+                next_episode['shortName'], next_episode['title'],
+                next_episode['sequenceNumber']
+            )
             if (
                 (first_unwatched > next_episode['sequenceNumber']
                 or not first_unwatched)
@@ -388,6 +412,11 @@ class MyShowsRu(object):
                 #
                 first_unwatched = next_episode['sequenceNumber']
                 episode_id = epi_id
+                logging.debug(
+                    'Saved next last unwatched: %s - %s (%s)',
+                    next_episode['shortName'], next_episode['title'],
+                    next_episode['sequenceNumber']
+                )
 
         return episode_id
 
