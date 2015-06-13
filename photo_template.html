@@ -72,6 +72,10 @@ form input[type="text"] {
     height: 1.4em;
 }
 
+input.spaceInput {
+    width: 3em;
+}
+
 label.outLabel {
     height: 1em;
     padding: 1em;
@@ -114,7 +118,7 @@ function getCookie(name)
     return value;
 }
 
-function has_storage() 
+function has_storage()
 {
     try {
         return false; // не работает localStorage для file:// в firefox
@@ -209,17 +213,50 @@ function doMakePreviews(preview_list,preview_org)
 {
     var result = '';
 
-    if ( preview_org != 'none' )
+    if (preview_org === 'table3x3')
     {
         result+="<table cellpadding=\"5\" cellspacing=\"5\" cols=\"3\"><tbody align=\"center\" valign=\"middle\">\n";
     }
-    for( var idx = 0; idx < preview_list.length; ++idx )
+    for(var idx = 0; idx < preview_list.length; ++idx)
     {
-        result += (preview_org=='none'?'':((idx % 3?'':'<tr>')+'<td>'))+preview_list[idx]+(preview_org=='none'?"\n":'</td>'+((idx+1) % 3?'':'</tr>')+"\n");
+        var nextPreview = preview_list[idx];
+        if (preview_org !== 'left_right') {
+            nextPreview = nextPreview.replace(' align=""', '');
+            result += (preview_org=='none'?'':((idx % 3?'':'<tr>')+'<td>')) + nextPreview + (preview_org=='none'?"\n":'</td>'+((idx+1) % 3?'':'</tr>')+"\n");
+        } else {
+            nextPreview = nextPreview.replace(' align=""', (idx %2) ? ' align="right"' : ' align="left"');
+            result += nextPreview;
+        }
     }
-    if ( preview_org != 'none' )
+    if (preview_org === 'table3x3')
     {
         result+=(preview_list.length%3?'</tr>\n':"")+"</tbody></table>\n";
+    }
+
+    return result+"\n\n";
+}
+
+function doMakePreviewsByMap(preview_map, preview_org)
+{
+    var result = '';
+
+    if (preview_org === 'table3x3')
+    {
+        result+="<table cellpadding=\"5\" cellspacing=\"5\" cols=\"3\"><tbody align=\"center\" valign=\"middle\">\n";
+    }
+    for (var idx in preview_map) {
+        var nextPreview = preview_map[idx];
+        if (preview_org !== 'left_right') {
+            nextPreview = nextPreview.replace(' align=""', '');
+            result += (preview_org=='none'?'':((idx % 3?'':'<tr>')+'<td>')) + nextPreview + (preview_org=='none'?"\n":'</td>'+((idx+1) % 3?'':'</tr>')+"\n");
+        } else {
+            nextPreview = nextPreview.replace(' align=""', (idx %2) ? ' align="right"' : ' align="left"');
+            result += nextPreview;
+        }
+    }
+    if (preview_org === 'table3x3')
+    {
+        result+=(preview_map.keys().length%3?'</tr>\n':"")+"</tbody></table>\n";
     }
 
     return result+"\n\n";
@@ -284,7 +321,7 @@ function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_ta
                     if ( previews != 'yes' ) {
                         next_preview += '<a href="'+(previews=='linkimage'?src_url:link_url)+'">';
                     }
-                    next_preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+'" border="'+preview_border+'">\n';
+                    next_preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+'" '+preview_border+'>\n';
                     if ( previews != 'yes' ) {
                         next_preview += '</a>';
                     }
@@ -347,7 +384,7 @@ function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,nl_
                             if ( previews != 'yes' ) {
                                 next_preview += '<a href="'+(previews=='linkimage'?full_src:link.href)+'">';
                             }
-                            next_preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+'" border="'+preview_border+'">';
+                            next_preview += '<img src="'+src+'"'+alt+' width="'+img.getAttribute('width')+'" height="'+img.getAttribute('height')+'" '+preview_border+'>';
                             if ( previews != 'yes' ) {
                                 next_preview += '</a>';
                             }
@@ -369,10 +406,12 @@ function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,nl_
     return preview ? doMakePreviews(preview,preview_org)+result : result;
 }
 
-function doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links)
+function doMakeTemplateFromGallery2(url,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links)
 {
-    var preview = null;
-    var result = "";
+    var preview = {},
+        images = {},
+        result,
+        defers = [];
 
     var nodes = htmldoc.evaluate('//td[@class="giItemCell"]/div/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null);
     if ( nodes === undefined ) {
@@ -383,62 +422,70 @@ function doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,n_idx,border
         var re_dom_url_res = re_dom_url.exec( url );
         var root_url = "";
         if ( re_dom_url_res ) { root_url = re_dom_url_res[1]; }
-        if ( to_idx === undefined || to_idx === "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength; }
+        if ( to_idx === undefined || to_idx === "" || (to_idx > nodes.snapshotLength) ) { to_idx = nodes.snapshotLength; }
         if ( previews != 'none' ) { preview = new Array(); }
         for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
             var link = nodes.snapshotItem(idx);
-            var img;
-            if ( link ) {
-                img = link.children[0];
-            }
-            if ( !link || !img ) {
-                result = "<format parse error!>";
-                return result;
-            } else {
-                var src = img.getAttribute('src');
-                if ( src[0] == '/' ) { src = root_url+src; }
-                var alt = "";
-                var link_url = link.href;
-                if ( link_url[0] == '/' ) { link_url = root_url+link_url; }
-                  //
-                req.open( 'GET', link_url, false );
-                req.send( null );
-                if ( req.status != 200 && req.status !== 0 ) {
-                    result = "ошибка получения страницы " + link_url;
-                } else {
-                    var linkhtmldoc = createHTMLDocumentByString(req.responseText);
-                    var full_img = linkhtmldoc.evaluate('//div[@id="photo"]/img',linkhtmldoc,null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue;
-                    if ( !full_img ) {
-                        result = "ошибка получения адреса полного изображения из страницы " + link_url;
-                        return result;
-                    } else {
-                        var full_src = full_img.src;
-                        if ( full_src[0] == '/' ) { full_src = root_url + full_src; }
-                        if ( alt_on ) { alt = ' alt="'+img.alt+'"'; }
-                        if ( previews != "none" ) {
-                            var next_preview = '';
-                            if ( previews != 'yes' ) {
-                                next_preview += '<a href="'+(previews=='linkimage'?full_src:link_url)+'">';
-                            }
-                            next_preview += '<img src="'+src+'"'+alt+' width="'+img.width+'" height="'+img.height+'" border="'+preview_border+'">';
-                            if ( previews != 'yes' ) {
-                                next_preview += '</a>';
-                            }
-                            preview.push( next_preview );
-                        }
-                        var desc = '';
-                        if ( alt_on ) { alt = ' alt="'+full_img.alt+'"'; }
-                        if ( alt_desc ) { desc = full_img.alt; }
-                        var img_idx_text = add_links ? doMakeIdxText( img_idx, (img_idx===n_idx), ((idx+1) >= to_idx) ) : '';
-                        var next_img = img_idx_text+img_idx+'. '+desc+nl_tag+'\n<img src="'+full_src+'"'+alt+' width="'+full_img.width+'" height="'+full_img.height+'" '+border+'>'+nl_tag+nl_tag+'\n\n';
-                        result += next_img;
-                    }
+            !function processLink(link, idx, img_idx) {
+                var img;
+                if ( link ) {
+                    img = link.children[0];
                 }
-            }
+                if ( !link || !img ) {
+                    result = "<format parse error!>";
+                } else {
+                    var src = img.getAttribute('src');
+                    if ( src[0] == '/' ) { src = root_url+src; }
+                    var alt = "";
+                    var link_url = link.href;
+                    if ( link_url[0] == '/' ) { link_url = root_url+link_url; }
+                      //
+                    defers.push($.get( link_url,
+                        function(res) {
+                            var text = res.responseText;
+                            var linkhtmldoc = createHTMLDocumentByString(res.responseText);
+                            var full_img = linkhtmldoc.evaluate('//div[@id="photo"]/img',linkhtmldoc,null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue;
+                            if ( !full_img ) {
+                                result = "\nошибка получения адреса полного изображения из страницы " + link_url + "\n";
+                            } else {
+                                var full_src = full_img.src;
+                                if ( full_src[0] == '/' ) { full_src = root_url + full_src; }
+                                if ( alt_on ) { alt = ' alt="'+img.alt+'"'; }
+                                if ( previews != "none" ) {
+                                    var next_preview = '';
+                                    if ( previews != 'yes' ) {
+                                        next_preview += '<a href="'+(previews=='linkimage'?full_src:link_url)+'">';
+                                    }
+                                    next_preview += '<img src="'+src+'"'+alt+' width="'+img.width+'" height="'+img.height+'" '+preview_border+' align="">';
+                                    if ( previews != 'yes' ) {
+                                        next_preview += '</a>';
+                                    }
+                                    preview[idx] = next_preview;
+                                }
+                                var desc = '';
+                                if ( alt_on ) { alt = ' alt="'+full_img.alt+'"'; }
+                                if ( alt_desc ) { desc = full_img.alt; }
+                                var img_idx_text = add_links ? doMakeIdxText( img_idx, (img_idx===n_idx), ((idx+1) >= to_idx) ) : '';
+                                var next_img = img_idx_text+img_idx+'. '+desc+nl_tag+'\n<img src="'+full_src+'"'+alt+' width="'+full_img.width+'" height="'+full_img.height+'" '+border+'>'+nl_tag+nl_tag+'\n\n';
+                            }
+                            images[idx] = next_img;
+                        }
+                    ));
+                }
+            }(link, idx, img_idx);
         }
     }
 
-    return preview ? doMakePreviews(preview,preview_org)+result : result;
+    $.when.apply($,defers).then(function() {
+        var result_text = '';
+        if (preview) {
+            result_text += doMakePreviewsByMap(preview,preview_org);
+        }
+        for (var idx in images) {
+            result_text += images[idx];
+        }
+        document.getElementById('result').value = result_text;
+    });
 }
 
 function doMakeTemplateFromFlickr(url,req,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links)
@@ -495,7 +542,7 @@ function doMakeTemplateFromFlickr(url,req,htmldoc,from_idx,to_idx,n_idx,border,n
                             if ( previews != 'yes' ) {
                                 next_preview += '<a href="'+(previews=='linkimage'?full_src:link_url)+'">';
                             }
-                            next_preview += '<img src="'+src+'"'+alt+' width="'+img.width+'" height="'+img.height+'" border="'+preview_border+'">';
+                            next_preview += '<img src="'+src+'"'+alt+' width="'+img.width+'" height="'+img.height+'" '+preview_border+'>';
                             if ( previews != 'yes' ) {
                                 next_preview += '</a>';
                             }
@@ -562,6 +609,10 @@ function doMakeTemplate()
     if ( previews === undefined || previews === "" ) { previews = "none"; }
     var preview_border = document.getElementById('preview_border').value;
     if ( preview_border === undefined || preview_border === "" ) { preview_border = 0; }
+    var preview_v_space = document.getElementById('preview_v_space').value;
+    if ( preview_v_space === undefined ) { preview_v_space = ""; }
+    var preview_h_space = document.getElementById('preview_h_space').value;
+    if ( preview_h_space === undefined ) { preview_h_space = ""; }
     var preview_org = document.getElementById('preview_org').value;
     if ( preview_org === undefined || preview_org === "" ) { preview_org = "none"; }
     var alt_on = document.getElementById('alt_on').checked;
@@ -571,6 +622,10 @@ function doMakeTemplate()
     var border_str = 'border="'+border+'"';
     if ( v_space !== "" ) { border_str+=' vspace="'+v_space+'"'; }
     if ( h_space !== "" ) { border_str+=' hspace="'+h_space+'"'; }
+      //
+    var preview_border_str = 'border="'+preview_border+'"';
+    if ( preview_v_space !== "" ) { preview_border_str+=' vspace="'+preview_v_space+'"'; }
+    if ( preview_h_space !== "" ) { preview_border_str+=' hspace="'+preview_h_space+'"'; }
       //
     if ( type == "ya.fotki" || type == "gallery1" || type == "gallery2" ) {
         $('#container').load('http://google.com'); // SERIOUSLY!
@@ -585,38 +640,33 @@ function doMakeTemplate()
                 var htmldoc = createHTMLDocumentByString(text);
                 if ( type == "ya.fotki" ) {
                     result =
-                        doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links);
+                        doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border_str,preview_org,alt_on,alt_desc,add_links);
                     status = "ok";
                 } else if ( type == "gallery1" ) {
                     result =
-                        doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links);
+                        doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border_str,preview_org,alt_on,alt_desc,add_links);
                     status = "ok";
                 } else if ( type == "gallery2" ) {
-                    result =
-                        doMakeTemplateFromGallery2(url,req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links);
-                    status = "ok";
+                    doMakeTemplateFromGallery2(url,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border_str,preview_org,alt_on,alt_desc,add_links);
                 } else if ( type == "flickr" ) {
                     result =
-                        doMakeTemplateFromFlickr(url,req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links);
+                        doMakeTemplateFromFlickr(url,req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border_str,preview_org,alt_on,alt_desc,add_links);
                     status = "ok";
                 } else {
                     result = "Unknown gallery type:"+type;
                     status = "gallery error";
                 }
-                document.getElementById('result').value = result;
-                doSaveSettings();
-                setLabelText("status",status);
             }
         );
-        return;
     } else {
         result = "Unknown gallery type:"+type;
         status = "gallery error";
     }
 
-    document.getElementById('result').value = result;
-    doSaveSettings();
+    if (status)
+        document.getElementById('result').value = result;
     setLabelText("status",status);
+    doSaveSettings();
 }
 
 </script>
@@ -638,14 +688,14 @@ function doMakeTemplate()
                 <input type="radio" name="type" id="type" value="ya.fotki" checked="checked" onClick="document.getElementById('type_name').value='ya.fotki';" /> Яндекс.Фотки
                 <input type="radio" name="type" value="gallery1" onClick="document.getElementById('type_name').value='gallery1';" /> Gallery1 (menalto)
                 <input type="radio" name="type" value="gallery2" onClick="document.getElementById('type_name').value='gallery2';" /> Gallery2 (menalto)
-                <input type="radio" name="type" value="flickr" onClick="document.getElementById('type_name').value='flickr';" /> Flickr                
+                <input type="radio" name="type" value="flickr" onClick="document.getElementById('type_name').value='flickr';" /> Flickr
                 <input type="hidden" id="type_name" value="ya.fotki" />
             </div>
             <div>
                 <label class="leftLabel">Фотографии:</label>
-                <label for="from">С номера:</label><input type="number" id="from" value="1" size="1" maxlength="2" min="1" placeholder="1" />
-                <label for="to">По номер:</label><input type="number" id="to" value="" size="1" maxlength="2" min="1" />
-                <label for="idx">Нумеровать c:</label><input type="number" id="idx" value="" size="1" maxlength="2" min="0" placeholder="1" />
+                <label for="from">С номера:</label><input type="number" id="from" value="1" size="1" maxlength="2" min="1" placeholder="1" class="spaceInput"/>
+                <label for="to">По номер:</label><input type="number" id="to" value="" size="1" maxlength="2" min="1" class="spaceInput"/>
+                <label for="idx">Нумеровать c:</label><input type="number" id="idx" value="" size="1" maxlength="2" min="0" placeholder="1" class="spaceInput"/>
             </div>
             <div>
                 <label class="leftLabel"></label>
@@ -654,9 +704,9 @@ function doMakeTemplate()
             </div>
             <div>
                 <label class="leftLabel"></label>
-                <label for="border">Граница:</label><input type="number" id="border" value="1" size="1" maxlength="1" min="0" placeholder="0" />
-                <label for="v_space">VSpace:</label><input type="number" id="v_space" value="5" size="1" maxlength="2" min="0" />
-                <label for="h_space">HSpace:</label><input type="number" id="h_space" value="" size="1" maxlength="2" min="0" />
+                <label for="border">Граница:</label><input type="number" id="border" value="1" size="1" maxlength="1" min="0" placeholder="0" class="spaceInput"/>
+                <label for="v_space">VSpace:</label><input type="number" id="v_space" value="5" size="1" maxlength="2" min="0" class="spaceInput"/>
+                <label for="h_space">HSpace:</label><input type="number" id="h_space" value="" size="1" maxlength="2" min="0" class="spaceInput"/>
                 <label for="nl_tag">Таг новой строки:</label>
                 <select id="nl_tag">
                     <option value="none">Нет</option>
@@ -676,11 +726,14 @@ function doMakeTemplate()
                     <option value="linkimage">Со ссылкой на полную</option>
                     <option value="linkpage">Со ссылкой на страницу</option>
                 </select>
-                <label for="preview_border">Граница:</label><input type="number" id="preview_border" value="0" size="1" maxlength="1" min="0" placeholder="0" />
+                <label for="preview_border">Граница:</label><input type="number" id="preview_border" class="spaceInput" value="0" size="2" maxlength="1" min="0" placeholder="0" />
+                <label for="preview_v_space">VSpace:</label><input type="number" id="preview_v_space" class="spaceInput" value="5" size="2" maxlength="2" min="0" />
+                <label for="preview_h_space">HSpace:</label><input type="number" id="preview_h_space" class="spaceInput" value="5" size="2" maxlength="2" min="0" />
                 <label for="preview_org">&nbsp;</label>
                 <select id="preview_org">
                     <option value="none">Не расставлять</option>
                     <option value="table3x3">Расставить таблицей 3х</option>
+                    <option value="left_right">Парой лево-право</option>
                 </select>
             </div>
             <div>
