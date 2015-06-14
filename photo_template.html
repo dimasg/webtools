@@ -256,7 +256,7 @@ function doMakePreviewsByMap(preview_map, preview_org)
     }
     if (preview_org === 'table3x3')
     {
-        result+=(preview_list.length%3?'</tr>\n':"")+"</tbody></table>\n";
+        result+=(preview_map.keys().length%3?'</tr>\n':"")+"</tbody></table>\n";
     }
 
     return result+"\n\n";
@@ -656,19 +656,17 @@ function doMakeTemplate()
                     result = "Unknown gallery type:"+type;
                     status = "gallery error";
                 }
-
-                if (status)
-                    document.getElementById('result').value = result;
             }
         );
     } else {
         result = "Unknown gallery type:"+type;
-        document.getElementById('result').value = result;
         status = "gallery error";
     }
 
-    doSaveSettings();
+    if (status)
+        document.getElementById('result').value = result;
     setLabelText("status",status);
+    doSaveSettings();
 }
 
 </script>
