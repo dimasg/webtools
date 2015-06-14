@@ -155,6 +155,12 @@ function setSelectValue(selector,value)
 function doLoadSettings()
 {
     var c_val;
+    c_val = getKeyValue('type_name');
+    if ( c_val !== null ) {
+        var widget = document.getElementById('type-'+c_val);
+        if (widget) widget.checked = true;
+        document.getElementById('type_name').value = c_val;
+    }
     c_val = getKeyValue('border');
     if ( c_val !== null ) { document.getElementById('border').value = c_val; }
     c_val = getKeyValue('v_space');
@@ -167,6 +173,10 @@ function doLoadSettings()
     if ( c_val !== null ) { setSelectValue( document.getElementById('previews'), c_val ); }
     c_val = getKeyValue('preview_border');
     if ( c_val !== null ) { document.getElementById('preview_border').value = c_val; }
+    c_val = getKeyValue('preview_v_space');
+    if ( c_val !== null ) { document.getElementById('preview_v_space').value = c_val; }
+    c_val = getKeyValue('preview_h_space');
+    if ( c_val !== null ) { document.getElementById('preview_h_space').value = c_val; }
     c_val = getKeyValue('preview_org');
     if ( c_val !== null ) { setSelectValue( document.getElementById('preview_org'), c_val ); }
     c_val = getKeyValue('alt_on');
@@ -179,12 +189,15 @@ function doLoadSettings()
 
 function doSaveSettings()
 {
+    setKeyValue( 'type_name', document.getElementById('type_name').value );
     setKeyValue( 'border', document.getElementById('border').value );
     setKeyValue( 'v_space', document.getElementById('v_space').value );
     setKeyValue( 'h_space', document.getElementById('h_space').value );
     setKeyValue( 'nl_tag', document.getElementById('nl_tag').value );
     setKeyValue( 'previews', document.getElementById('previews').value );
     setKeyValue( 'preview_border', document.getElementById('preview_border').value );
+    setKeyValue( 'preview_v_space', document.getElementById('preview_v_space').value );
+    setKeyValue( 'preview_h_space', document.getElementById('preview_h_space').value );
     setKeyValue( 'preview_org', document.getElementById('preview_org').value );
     setKeyValue( 'alt_on', document.getElementById('alt_on').checked );
     setKeyValue( 'alt_desc', document.getElementById('alt_desc').checked );
@@ -567,7 +580,7 @@ function setLabelText(id,text)
 {
     var elem;
 
-    if( document.getElementById  && (elem=document.getElementById(id)) )
+    if( document.getElementById && (elem=document.getElementById(id)) )
     {
         if( !elem.firstChild ) {
            elem.appendChild( document.createTextNode( text ) );
@@ -685,10 +698,10 @@ function doMakeTemplate()
             </div>
             <div>
                 <label for="type" class="leftLabel">Тип галереи:</label>
-                <input type="radio" name="type" id="type" value="ya.fotki" checked="checked" onClick="document.getElementById('type_name').value='ya.fotki';" /> Яндекс.Фотки
-                <input type="radio" name="type" value="gallery1" onClick="document.getElementById('type_name').value='gallery1';" /> Gallery1 (menalto)
-                <input type="radio" name="type" value="gallery2" onClick="document.getElementById('type_name').value='gallery2';" /> Gallery2 (menalto)
-                <input type="radio" name="type" value="flickr" onClick="document.getElementById('type_name').value='flickr';" /> Flickr
+                <input type="radio" name="type" id="type-ya.fotki" value="ya.fotki" checked="checked" onClick="document.getElementById('type_name').value='ya.fotki';" /> Яндекс.Фотки
+                <input type="radio" name="type" id="type-gallery1" value="gallery1" onClick="document.getElementById('type_name').value='gallery1';" /> Gallery1 (menalto)
+                <input type="radio" name="type" id="type-gallery2" value="gallery2" onClick="document.getElementById('type_name').value='gallery2';" /> Gallery2 (menalto)
+                <input type="radio" name="type" id="type-flickr" value="flickr" onClick="document.getElementById('type_name').value='flickr';" /> Flickr
                 <input type="hidden" id="type_name" value="ya.fotki" />
             </div>
             <div>
