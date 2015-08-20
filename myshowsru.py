@@ -525,13 +525,15 @@ class MyShowsRu(object):
             ))
         print()
 
-    def set_show_status(self, alias, status):
+    def set_show_status(self, alias, status, accurate):
         """ set show status """
         title = self.title_by_alias(alias, no_exit=True)
 
         search_result = self.search_show(title)
         for show_id in search_result:
             show = search_result[show_id]
+            if accurate and show['title'] != alias:
+                continue
             url = self.config.url.status.format(show['id'], status)
             logging.debug('Set show status: %s%s', self.api_url, url)
             request = Request(self.api_url + url)
@@ -597,6 +599,11 @@ def main():
         'status_value', action='store', help='show status',
         choices=['watching', 'later', 'cancelled', 'remove']
     )
+    status_parser.add_argument(
+        '--accurate', action='store_const',
+        const=True, default=False,
+        help='Exact name comparsion'
+    )
 
     parser.add_argument(
         '--debug', action='store_const',
@@ -638,7 +645,7 @@ def main():
     elif 'search_alias' in cmd_args:
         myshows.show_search_result(cmd_args.search_alias)
     elif 'status_alias' in cmd_args:
-        myshows.set_show_status(cmd_args.status_alias, cmd_args.status_value)
+        myshows.set_show_status(cmd_args.status_alias, cmd_args.status_value, cmd_args.accurate)
     else:
         parser.print_usage()
 
