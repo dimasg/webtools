@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """ myshows.ru utility """
 
@@ -23,8 +23,6 @@ except ImportError:
     from cookielib import CookieJar
     from urllib2 import build_opener, HTTPCookieProcessor, HTTPError, Request, URLError
 
-import config
-
 
 def tr_out(from_str):
     """ translate unshowed symbols """
@@ -35,9 +33,9 @@ def tr_out(from_str):
 class MyShowsRu(object):
     """ work with api.myshows.ru """
     def __init__(self, config_name_name):
-        cfg_file = file(config_name_name)
-        self.config = config.Config(cfg_file)
-        logging.info('Config file %s loaded!', config_name_name)
+        cfg_file = open(config_name_name)
+        self.config = json.load(cfg_file)
+        logging.debug('Parsed config file %s result: %s', config_name_name, self.config)
 
         self.cookie_jar = CookieJar()
         self.opener = build_opener(
