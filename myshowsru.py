@@ -267,17 +267,19 @@ class MyShowsRu(object):
         last_number = 0
         episode_id = None
         for epi_id in watched:
+            logging.debug('Next watched id: %s', epi_id)
             next_episode = episodes[epi_id]
             logging.debug(
-                'Trying next episode: %s - %s',
-                next_episode['shortName'], next_episode['title']
+                'Trying next episode: %s - %s (id: %s/seq: %s)',
+                next_episode['shortName'], next_episode['title'],
+                next_episode['id'], next_episode['sequenceNumber']
             )
             if last_number < next_episode['sequenceNumber']:
                 last_number = next_episode['sequenceNumber']
                 episode_id = epi_id
                 logging.debug(
-                    'Saved next last episode: %s - %s',
-                    next_episode['shortName'], next_episode['title']
+                    'Saved next last episode: %s - %s (id: %s)',
+                    next_episode['shortName'], next_episode['title'], episode_id
                 )
 
         logging.debug('Found last watched %s', episode_id)
