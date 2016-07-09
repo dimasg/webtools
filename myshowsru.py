@@ -9,13 +9,16 @@ import json
 import logging
 #import pprint
 import re
-from sys import stderr
+import sys
 import urllib
 
 
 def tr_out(from_str):
     """ translate unshowed symbols """
-    return from_str.encode('utf-8').decode('ascii', 'ignore')
+    if sys.platform == 'win32':
+        return from_str.encode('utf-8').decode('ascii', 'ignore')
+    else:
+        return from_str
 #    return from_str.replace(u'\u2026', '...')
 
 
@@ -62,13 +65,13 @@ class MyShowsRu(object):
             )
         except urllib.error.HTTPError as ex:
             if ex.code == 403:
-                stderr.write('Bad login name or password!\n')
+                sys.stderr.write('Bad login name or password!\n')
             else:
-                stderr.write('Login error!\n')
+                sys.stderr.write('Login error!\n')
             logging.debug('HTTP error #%s: %s\n', ex.code, ex.read())
             exit(1)
         except urllib.error.URLError as ex:
-            stderr.write('Login error!\n')
+            sys.stderr.write('Login error!\n')
             logging.debug('URLError - %s\n', ex.reason)
             exit(1)
 
