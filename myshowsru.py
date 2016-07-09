@@ -394,8 +394,8 @@ class MyShowsRu(object):
                 next_episode['sequenceNumber']
             )
             if (
-                (first_unwatched > next_episode['sequenceNumber']
-                or not first_unwatched)
+                (not first_unwatched
+                or first_unwatched > next_episode['sequenceNumber'])
                 and last_watched < next_episode['sequenceNumber']
             ):
                 #
