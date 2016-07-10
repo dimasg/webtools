@@ -2,15 +2,15 @@
 # -*- coding: utf-8 -*-
 """ myshows.ru utility """
 
-import argparse
 import datetime
-import http.cookiejar
 import json
 import logging
-#import pprint
 import re
 import sys
 import urllib
+
+import argparse
+import http.cookiejar
 
 
 def tr_out(from_str):
@@ -141,8 +141,8 @@ class MyShowsRu(object):
                 next_episode = episodes[epi_id]
                 if season == -1 or next_episode['seasonNumber'] == season:
                     list_map[
-                        next_episode['seasonNumber'] * 1000
-                        + next_episode['episodeNumber']
+                        next_episode['seasonNumber'] * 1000 +
+                        next_episode['episodeNumber']
                     ] = next_episode
 
             watched = self.load_watched(show_id)
@@ -397,9 +397,9 @@ class MyShowsRu(object):
                 next_episode['sequenceNumber']
             )
             if (
-                (not first_unwatched
-                or first_unwatched > next_episode['sequenceNumber'])
-                and last_watched < next_episode['sequenceNumber']
+                (not first_unwatched or
+                 first_unwatched > next_episode['sequenceNumber']) and
+                last_watched < next_episode['sequenceNumber']
             ):
                 #
                 first_unwatched = next_episode['sequenceNumber']
@@ -442,8 +442,8 @@ class MyShowsRu(object):
             for epi_id in episodes:
                 next_episode = episodes[epi_id]
                 if (
-                    next_episode['seasonNumber'] == season
-                    and next_episode['episodeNumber'] == episode
+                    next_episode['seasonNumber'] == season and
+                    next_episode['episodeNumber'] == episode
                 ):
                     valid_op = False
                     old_date = ''
@@ -462,22 +462,22 @@ class MyShowsRu(object):
 
                     if not valid_op:
                         print()
-                        print('Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" already {4} {5}'\
-                             .format(
+                        print('Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" already {4} {5}'
+                              .format(
                                  tr_out(next_episode['title']),
                                  next_episode['seasonNumber'],
                                  next_episode['episodeNumber'],
                                  tr_out(epis['title']),
                                  msg,
                                  old_date
-                             ))
+                              ))
                     else:
                         logging.debug('Set checked: %s%s', self.api_url, url)
                         request = urllib.request.Request(self.api_url + url)
                         self.opener.open(request)
                         print()
                         print(
-                            'Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" set {4}'\
+                            'Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" set {4}'
                             .format(
                                 tr_out(next_episode['title']),
                                 next_episode['seasonNumber'],
