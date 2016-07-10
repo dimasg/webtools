@@ -56,7 +56,7 @@ class MyShowsRu(object):
                 self.api_url + self.config['url']['login'], req_data.encode('utf-8')
             )
             handle = self.opener.open(request)
-            logging.debug('Login result: %s/%s', handle.headers, handle.readall().decode('utf-8'))
+            logging.debug('Login result: %s/%s', handle.headers, handle.read().decode('utf-8'))
             self.cookie_jar.clear(
                 self.config['api_domain'], '/', 'SiteUser[login]'
             )
@@ -88,7 +88,7 @@ class MyShowsRu(object):
             self.api_url + self.config['url']['list_shows']
         )
         handle = self.opener.open(request)
-        self.shows_data = json.loads(handle.readall().decode('utf-8'))
+        self.shows_data = json.loads(handle.read().decode('utf-8'))
         self.list_loaded_ = True
 
     def list_all_shows(self):
@@ -227,7 +227,7 @@ class MyShowsRu(object):
                 self.api_url + self.config['url']['list_episodes'].format(show_id)
             )
             handle = self.opener.open(request)
-            self.episodes_data[show_id] = json.loads(handle.readall().decode('utf-8'))
+            self.episodes_data[show_id] = json.loads(handle.read().decode('utf-8'))
 
         return self.episodes_data[show_id]
 
@@ -244,7 +244,7 @@ class MyShowsRu(object):
                 self.api_url + self.config['url']['list_watched'].format(show_id)
             )
             handle = self.opener.open(request)
-            self.watched_data[show_id] = json.loads(handle.readall().decode('utf-8'))
+            self.watched_data[show_id] = json.loads(handle.read().decode('utf-8'))
 
         return self.watched_data[show_id]
 
@@ -502,7 +502,7 @@ class MyShowsRu(object):
             self.api_url + self.config['url']['search'], req_data.encode('utf-8')
         )
         handle = self.opener.open(request)
-        search_result = json.loads(handle.readall().decode('utf-8'))
+        search_result = json.loads(handle.read().decode('utf-8'))
         logging.debug('Search result: %s', search_result)
         return search_result
 
