@@ -455,8 +455,8 @@ function doMakeTemplateFromGallery2(url,htmldoc,from_idx,to_idx,n_idx,border,nl_
                       //
                     defers.push($.get( link_url,
                         function(res) {
-                            var text = res.responseText;
-                            var linkhtmldoc = createHTMLDocumentByString(res.responseText);
+                            var text = ('responseText' in res) ? res.responseText : res;
+                            var linkhtmldoc = createHTMLDocumentByString(text);
                             var full_img = linkhtmldoc.evaluate('//div[@id="photo"]/img',linkhtmldoc,null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue;
                             if ( !full_img ) {
                                 result = "\nошибка получения адреса полного изображения из страницы " + link_url + "\n";
@@ -645,7 +645,8 @@ function doMakeTemplate()
 
         $.get( url,
             function(res) {
-                var text = res.responseText;
+                var text = ('responseText' in res) ? res.responseText : res;
+                //document.getElementById('result').value = text;
                 text = text.replace(/(<[^>]*?)on(?:(?:un)?load|(?:db)?click|mouse(?:down|up|over|out|move)|key(?:press|down|up)|abort|blur|change|error|focus|re(?:size|set)|select|submit)\s*?=\s*?["'][^"']*?["']/ig, "$1");
                 text = text.replace(/<\s*?script[^>]*?>[\s\S]*?<\s*?\/script\s*?>/ig, "");
                 var htmldoc = createHTMLDocumentByString(text);
@@ -667,10 +668,11 @@ function doMakeTemplate()
                     result = "Unknown gallery type:"+type;
                     status = "gallery error";
                 }
-              if (status)
-                  document.getElementById('result').value = result;
-              setLabelText("status",status);
-              doSaveSettings();
+                if (status) {
+                    document.getElementById('result').value = result;
+                }
+                setLabelText("status",status);
+                doSaveSettings();
             }
         );
     } else {
