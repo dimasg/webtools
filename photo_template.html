@@ -641,8 +641,6 @@ function doMakeTemplate()
     if ( preview_h_space !== "" ) { preview_border_str+=' hspace="'+preview_h_space+'"'; }
       //
     if ( type == "ya.fotki" || type == "gallery1" || type == "gallery2" ) {
-        $('#container').load('http://google.com'); // SERIOUSLY!
-
         var req;
 
         $.get( url,
@@ -669,6 +667,10 @@ function doMakeTemplate()
                     result = "Unknown gallery type:"+type;
                     status = "gallery error";
                 }
+              if (status)
+                  document.getElementById('result').value = result;
+              setLabelText("status",status);
+              doSaveSettings();
             }
         );
     } else {
@@ -676,10 +678,6 @@ function doMakeTemplate()
         status = "gallery error";
     }
 
-    if (status)
-        document.getElementById('result').value = result;
-    setLabelText("status",status);
-    doSaveSettings();
 }
 
 </script>
