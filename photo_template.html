@@ -286,12 +286,11 @@ function doMakeIdxText(img_idx,first_image,last_image)
     return img_idx_text;
 }
 
-function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links)
+function doMakeTemplateFromYandex(url,text,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links)
 {
     var preview = null;
     var result = "";
-
-    var nodes = htmldoc.evaluate('//a[@class="photo"]',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null);
+    var nodes = document.createRange().createContextualFragment(text).querySelectorAll('a.photo');
     if ( nodes === undefined ) {
         result = "<Empty page>";
     } else {
@@ -299,10 +298,10 @@ function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_ta
         //alert( nodes.snapshotLength + " image(s)" );
         var re_size=/max-width: (\d+)px; max-height: (\d+)px;/;
         var re_src=/(.*)_[XXSLM]{1,4}$/;
-        if ( to_idx === undefined || to_idx === "" || to_idx > nodes.snapshotLength ) { to_idx = nodes.snapshotLength; }
+        if ( to_idx === undefined || to_idx === "" || to_idx > nodes.length ) { to_idx = nodes.length; }
         if ( previews != 'none' ) { preview = new Array(); }
         for(var idx=from_idx-1, img_idx=n_idx; idx < to_idx; ++idx, ++img_idx ) {
-            var link = nodes.snapshotItem(idx);
+            var link = nodes[idx];
             var img;
             if ( link ) {
                 img = link.children[0];
@@ -353,11 +352,12 @@ function doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,n_idx,border,nl_ta
     return preview ? doMakePreviews(preview,preview_org)+result : result;
 }
 
-function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links)
+function doMakeTemplateFromGallery1(req,text,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links)
 {
     var preview = null;
     var result = "";
 
+    var htmldoc = createHTMLDocumentByString(text);
     var nodes = htmldoc.evaluate('//div[@class="vafloat2"]/table/tbody/tr/td[@align="center"]/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null);
     if ( nodes === undefined ) {
         result = "<Empty page>";
@@ -419,13 +419,14 @@ function doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,n_idx,border,nl_
     return preview ? doMakePreviews(preview,preview_org)+result : result;
 }
 
-function doMakeTemplateFromGallery2(url,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links)
+function doMakeTemplateFromGallery2(url,text,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links)
 {
     var preview = {},
         images = {},
         result,
         defers = [];
 
+    var htmldoc = createHTMLDocumentByString(text);
     var nodes = htmldoc.evaluate('//td[@class="giItemCell"]/div/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null);
     if ( nodes === undefined ) {
         result = "<Empty page>";
@@ -501,11 +502,12 @@ function doMakeTemplateFromGallery2(url,htmldoc,from_idx,to_idx,n_idx,border,nl_
     });
 }
 
-function doMakeTemplateFromFlickr(url,req,htmldoc,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links)
+function doMakeTemplateFromFlickr(url,req,text,from_idx,to_idx,n_idx,border,nl_tag,previews,preview_border,preview_org,alt_on,alt_desc,add_links)
 {
     var preview = null;
     var result = "";
 
+    var htmldoc = createHTMLDocumentByString(text);
     var nodes = htmldoc.evaluate('//span[@class="photo_container pc_s"]/a',htmldoc,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null);
     if ( nodes === undefined ) {
         result = "<Empty page>";
@@ -649,20 +651,19 @@ function doMakeTemplate()
                 //document.getElementById('result').value = text;
                 text = text.replace(/(<[^>]*?)on(?:(?:un)?load|(?:db)?click|mouse(?:down|up|over|out|move)|key(?:press|down|up)|abort|blur|change|error|focus|re(?:size|set)|select|submit)\s*?=\s*?["'][^"']*?["']/ig, "$1");
                 text = text.replace(/<\s*?script[^>]*?>[\s\S]*?<\s*?\/script\s*?>/ig, "");
-                var htmldoc = createHTMLDocumentByString(text);
                 if ( type == "ya.fotki" ) {
                     result =
-                        doMakeTemplateFromYandex(url,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border_str,preview_org,alt_on,alt_desc,add_links);
+                        doMakeTemplateFromYandex(url,text,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border_str,preview_org,alt_on,alt_desc,add_links);
                     status = "ok";
                 } else if ( type == "gallery1" ) {
                     result =
-                        doMakeTemplateFromGallery1(req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border_str,preview_org,alt_on,alt_desc,add_links);
+                        doMakeTemplateFromGallery1(req,text,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border_str,preview_org,alt_on,alt_desc,add_links);
                     status = "ok";
                 } else if ( type == "gallery2" ) {
-                    doMakeTemplateFromGallery2(url,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border_str,preview_org,alt_on,alt_desc,add_links);
+                    doMakeTemplateFromGallery2(url,text,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border_str,preview_org,alt_on,alt_desc,add_links);
                 } else if ( type == "flickr" ) {
                     result =
-                        doMakeTemplateFromFlickr(url,req,htmldoc,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border_str,preview_org,alt_on,alt_desc,add_links);
+                        doMakeTemplateFromFlickr(url,req,text,from_idx,to_idx,idx,border_str,nl_tag,previews,preview_border_str,preview_org,alt_on,alt_desc,add_links);
                     status = "ok";
                 } else {
                     result = "Unknown gallery type:"+type;
