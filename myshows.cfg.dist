@@ -1,4 +1,4 @@
-api_domain: 'api.myshows.ru'
+api_domain: 'api.myshows.me'
 
 login: { name: 'demo', md5pass: 'fe01ce2a7fbac8fafaed7c982a04e229' }
 
