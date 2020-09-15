@@ -35,7 +35,7 @@ class MyShowsRu(object):
         )
         self.logged_ = False
         self.list_loaded_ = False
-        self.api_url = 'http://' + self.config['api_domain']
+        self.api_url = 'https://' + self.config['api_domain']
         self.shows_data = {}
         self.episodes_data = {}
         self.watched_data = {}
