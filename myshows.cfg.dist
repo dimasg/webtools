@@ -1,23 +1,24 @@
-api_domain: 'api.myshows.me'
+{
+    "api_domain": "api.myshows.me",
 
-login: { name: 'demo', md5pass: 'fe01ce2a7fbac8fafaed7c982a04e229' }
+    "login": { "name": "demo", "md5pass": "fe01ce2a7fbac8fafaed7c982a04e229" },
 
-url: {
-    login: '/profile/login',
-    list_shows: '/profile/shows/',
-    list_watched: '/profile/shows/{0}/',
-    list_episodes: '/shows/{0}',
-    check_episode: '/profile/episodes/check/{0}',
-    uncheck_episode: '/profile/episodes/uncheck/{0}',
-    search: '/shows/search/',
-    status: '/profile/shows/{0}/{1}',
+    "url": {
+        "login": "/profile/login",
+        "list_shows": "/profile/shows/",
+        "list_watched": "/profile/shows/{0}/",
+        "list_episodes": "/shows/{0}",
+        "check_episode": "/profile/episodes/check/{0}",
+        "uncheck_episode": "/profile/episodes/uncheck/{0}",
+        "search": "/shows/search/",
+        "status": "/profile/shows/{0}/{1}"
+    },
+
+    "alias": {
+        "fut": "Futurama",
+        "ga": "Grey's Anatomy",
+        "tbb": "The Big Bang Theory",
+        "tg": "Top Gear",
+        "wd": "The Walking Dead"
+    }
 }
-
-alias: {
-    fut: 'Futurama',
-    ga: "Grey's Anatomy",
-    tbb: 'The Big Bang Theory',
-    tg: 'Top Gear',
-    wd: 'The Walking Dead'
-}
-

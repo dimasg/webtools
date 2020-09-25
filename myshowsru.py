@@ -1,51 +1,41 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """ myshows.ru utility """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-
-import argparse
 import datetime
 import json
 import logging
-#import pprint
 import re
-from sys import stderr
+import sys
 import urllib
 
-try:
-    from http.cookiejar import CookieJar
-    from urllib.request import build_opener
-except ImportError:
-    from cookielib import CookieJar
-    from urllib2 import build_opener, HTTPCookieProcessor, HTTPError, Request, URLError
-
-import config
+import argparse
+import http.cookiejar
 
 
 def tr_out(from_str):
     """ translate unshowed symbols """
-    return from_str.encode('utf-8').decode('ascii', 'ignore')
+    if sys.platform == 'win32':
+        return from_str.encode('utf-8').decode('ascii', 'ignore')
+    else:
+        return from_str
 #    return from_str.replace(u'\u2026', '...')
 
 
 class MyShowsRu(object):
     """ work with api.myshows.ru """
     def __init__(self, config_name_name):
-        cfg_file = file(config_name_name)
-        self.config = config.Config(cfg_file)
-        logging.info('Config file %s loaded!', config_name_name)
+        cfg_file = open(config_name_name)
+        self.config = json.load(cfg_file)
+        logging.debug('Parsed config file %s result: %s', config_name_name, self.config)
 
-        self.cookie_jar = CookieJar()
-        self.opener = build_opener(
-            HTTPCookieProcessor(self.cookie_jar)
+        self.cookie_jar = http.cookiejar.CookieJar()
+        self.opener = urllib.request.build_opener(
+            urllib.request.HTTPCookieProcessor(self.cookie_jar)
         )
         self.logged_ = False
         self.list_loaded_ = False
-        self.api_url = 'https://' + self.config.api_domain
+        self.api_url = 'https://' + self.config['api_domain']
         self.shows_data = {}
         self.episodes_data = {}
         self.watched_data = {}
@@ -55,33 +45,33 @@ class MyShowsRu(object):
         if self.logged_:
             return
         try:
-            req_data = urllib.urlencode({
-                'login': self.config.login.name,
-                'password': self.config.login.md5pass
+            req_data = urllib.parse.urlencode({
+                'login': self.config['login']['name'],
+                'password': self.config['login']['md5pass']
             })
             logging.debug(
-                'Login, url: %s%s, data: %s', self.api_url, self.config.url.login, req_data
+                'Login, url: %s%s, data: %s', self.api_url, self.config['url']['login'], req_data
             )
-            request = Request(
-                self.api_url + self.config.url.login, req_data
+            request = urllib.request.Request(
+                self.api_url + self.config['url']['login'], req_data.encode('utf-8')
             )
             handle = self.opener.open(request)
-            logging.debug('Login result: %s/%s', handle.headers, handle.read())
+            logging.debug('Login result: %s/%s', handle.headers, handle.read().decode('utf-8'))
             self.cookie_jar.clear(
-                self.config.api_domain, '/', 'SiteUser[login]'
+                self.config['api_domain'], '/', 'SiteUser[login]'
             )
             self.cookie_jar.clear(
-                self.config.api_domain, '/', 'SiteUser[password]'
+                self.config['api_domain'], '/', 'SiteUser[password]'
             )
-        except HTTPError as ex:
+        except urllib.error.HTTPError as ex:
             if ex.code == 403:
-                stderr.write('Bad login name or password!\n')
+                sys.stderr.write('Bad login name or password!\n')
             else:
-                stderr.write('Login error!\n')
+                sys.stderr.write('Login error!\n')
             logging.debug('HTTP error #%s: %s\n', ex.code, ex.read())
             exit(1)
-        except URLError as ex:
-            stderr.write('Login error!\n')
+        except urllib.error.URLError as ex:
+            sys.stderr.write('Login error!\n')
             logging.debug('URLError - %s\n', ex.reason)
             exit(1)
 
@@ -93,12 +83,12 @@ class MyShowsRu(object):
             return
         if not self.logged_:
             self.do_login()
-        logging.debug('Login: %s%s', self.api_url, self.config.url.list_shows)
-        request = Request(
-            self.api_url + self.config.url.list_shows
+        logging.debug('Login: %s%s', self.api_url, self.config['url']['list_shows'])
+        request = urllib.request.Request(
+            self.api_url + self.config['url']['list_shows']
         )
         handle = self.opener.open(request)
-        self.shows_data = json.loads(handle.read())
+        self.shows_data = json.loads(handle.read().decode('utf-8'))
         self.list_loaded_ = True
 
     def list_all_shows(self):
@@ -151,8 +141,8 @@ class MyShowsRu(object):
                 next_episode = episodes[epi_id]
                 if season == -1 or next_episode['seasonNumber'] == season:
                     list_map[
-                        next_episode['seasonNumber'] * 1000
-                        + next_episode['episodeNumber']
+                        next_episode['seasonNumber'] * 1000 +
+                        next_episode['episodeNumber']
                     ] = next_episode
 
             watched = self.load_watched(show_id)
@@ -187,7 +177,7 @@ class MyShowsRu(object):
         """ return show id by alias """
         logging.debug('title_by_alias(%s)', query)
         alias = query.lower()
-        if alias not in self.config.alias:
+        if alias not in self.config['alias']:
             logging.debug('Unknown alias - "%s"', alias)
             if no_exit:
                 print('Cannot find alias "{0}", will try it as title!'.format(query))
@@ -196,13 +186,13 @@ class MyShowsRu(object):
                 print('Unknown alias - {0}'.format(query))
                 exit(1)
         else:
-            logging.debug('title_by_alias(%s) = %s', query, self.config.alias[alias])
-            return self.config.alias[alias]
+            logging.debug('title_by_alias(%s) = %s', query, self.config['alias'][alias])
+            return self.config['alias'][alias]
 
     def alias_by_title(self, title):
         """ return show alias by title """
         logging.debug('alias_by_title(%s)', title)
-        for alias, a_title in self.config.alias.iteritems():
+        for alias, a_title in self.config['alias'].items():
             if a_title == title:
                 return alias
 
@@ -231,13 +221,13 @@ class MyShowsRu(object):
         if show_id not in self.episodes_data:
             logging.debug(
                 'Load episodes: %s%s',
-                self.api_url, self.config.url.list_episodes.format(show_id)
+                self.api_url, self.config['url']['list_episodes'].format(show_id)
             )
-            request = Request(
-                self.api_url + self.config.url.list_episodes.format(show_id)
+            request = urllib.request.Request(
+                self.api_url + self.config['url']['list_episodes'].format(show_id)
             )
             handle = self.opener.open(request)
-            self.episodes_data[show_id] = json.loads(handle.read())
+            self.episodes_data[show_id] = json.loads(handle.read().decode('utf-8'))
 
         return self.episodes_data[show_id]
 
@@ -248,13 +238,13 @@ class MyShowsRu(object):
         if show_id not in self.watched_data:
             logging.debug(
                 'Load watched: %s%s',
-                self.api_url, self.config.url.list_watched.format(show_id)
+                self.api_url, self.config['url']['list_watched'].format(show_id)
             )
-            request = Request(
-                self.api_url + self.config.url.list_watched.format(show_id)
+            request = urllib.request.Request(
+                self.api_url + self.config['url']['list_watched'].format(show_id)
             )
             handle = self.opener.open(request)
-            self.watched_data[show_id] = json.loads(handle.read())
+            self.watched_data[show_id] = json.loads(handle.read().decode('utf-8'))
 
         return self.watched_data[show_id]
 
@@ -407,9 +397,9 @@ class MyShowsRu(object):
                 next_episode['sequenceNumber']
             )
             if (
-                (first_unwatched > next_episode['sequenceNumber']
-                or not first_unwatched)
-                and last_watched < next_episode['sequenceNumber']
+                (not first_unwatched or
+                 first_unwatched > next_episode['sequenceNumber']) and
+                last_watched < next_episode['sequenceNumber']
             ):
                 #
                 first_unwatched = next_episode['sequenceNumber']
@@ -452,8 +442,8 @@ class MyShowsRu(object):
             for epi_id in episodes:
                 next_episode = episodes[epi_id]
                 if (
-                    next_episode['seasonNumber'] == season
-                    and next_episode['episodeNumber'] == episode
+                    next_episode['seasonNumber'] == season and
+                    next_episode['episodeNumber'] == episode
                 ):
                     valid_op = False
                     old_date = ''
@@ -462,32 +452,32 @@ class MyShowsRu(object):
                         if epi_id in watched:
                             old_date = watched[epi_id]['watchDate']
                         else:
-                            url = self.config.url.check_episode.format(epi_id)
+                            url = self.config['url']['check_episode'].format(epi_id)
                             valid_op = True
                     else:
                         msg = 'unchecked'
                         if epi_id in watched:
-                            url = self.config.url.uncheck_episode.format(epi_id)
+                            url = self.config['url']['uncheck_episode'].format(epi_id)
                             valid_op = True
 
                     if not valid_op:
                         print()
-                        print('Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" already {4} {5}'\
-                             .format(
+                        print('Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" already {4} {5}'
+                              .format(
                                  tr_out(next_episode['title']),
                                  next_episode['seasonNumber'],
                                  next_episode['episodeNumber'],
                                  tr_out(epis['title']),
                                  msg,
                                  old_date
-                             ))
+                              ))
                     else:
                         logging.debug('Set checked: %s%s', self.api_url, url)
-                        request = Request(self.api_url + url)
+                        request = urllib.request.Request(self.api_url + url)
                         self.opener.open(request)
                         print()
                         print(
-                            'Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" set {4}'\
+                            'Episode "{0}" (s{1:02d}e{2:02d}) of "{3}" set {4}'
                             .format(
                                 tr_out(next_episode['title']),
                                 next_episode['seasonNumber'],
@@ -501,18 +491,18 @@ class MyShowsRu(object):
         """ search show """
         if not self.logged_:
             self.do_login()
-        req_data = urllib.urlencode({
+        req_data = urllib.parse.urlencode({
             'q': query,
         })
         logging.debug(
             'Search url/data: %s%s%s',
-            self.api_url, self.config.url.search, req_data
+            self.api_url, self.config['url']['search'], req_data
         )
-        request = Request(
-            self.api_url + self.config.url.search, req_data
+        request = urllib.request.Request(
+            self.api_url + self.config['url']['search'], req_data.encode('utf-8')
         )
         handle = self.opener.open(request)
-        search_result = json.loads(handle.read())
+        search_result = json.loads(handle.read().decode('utf-8'))
         logging.debug('Search result: %s', search_result)
         return search_result
 
@@ -536,9 +526,9 @@ class MyShowsRu(object):
             show = search_result[show_id]
             if accurate and show['title'] != alias:
                 continue
-            url = self.config.url.status.format(show['id'], status)
+            url = self.config['url']['status'].format(show['id'], status)
             logging.debug('Set show status: %s%s', self.api_url, url)
-            request = Request(self.api_url + url)
+            request = urllib.request.Request(self.api_url + url)
             self.opener.open(request)
             print('Show "{0}" status set to {1}'.format(
                 tr_out(show['title']), status
