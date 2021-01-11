@@ -227,7 +227,8 @@ class MyShowsRu(object):
                 self.api_url + self.config['url']['list_episodes'].format(show_id)
             )
             handle = self.opener.open(request)
-            self.episodes_data[show_id] = json.loads(handle.read().decode('utf-8'))
+            self.episodes_data[show_id] = episodes = json.loads(handle.read().decode('utf-8'))
+            logging.debug('Loaded episodes: %s', episodes)
 
         return self.episodes_data[show_id]
 
@@ -244,7 +245,8 @@ class MyShowsRu(object):
                 self.api_url + self.config['url']['list_watched'].format(show_id)
             )
             handle = self.opener.open(request)
-            self.watched_data[show_id] = json.loads(handle.read().decode('utf-8'))
+            self.watched_data[show_id] = watched = json.loads(handle.read().decode('utf-8'))
+            logging.debug('Loaded watched: %s', watched)
 
         return self.watched_data[show_id]
 
