@@ -17,12 +17,12 @@ def tr_out(from_str):
     """ translate unshowed symbols """
     if sys.platform == 'win32':
         return from_str.encode('utf-8').decode('ascii', 'ignore')
-    else:
-        return from_str
+
+    return from_str
 #    return from_str.replace(u'\u2026', '...')
 
 
-class MyShowsRu(object):
+class MyShowsRu:
     """ work with api.myshows.ru """
     def __init__(self, config_name_name):
         cfg_file = open(config_name_name)
@@ -50,7 +50,8 @@ class MyShowsRu(object):
                 'password': self.config['login']['md5pass']
             })
             logging.debug(
-                'Login, url: %s%s, data: %s', self.api_url, self.config['url']['login'], req_data
+                'Login, url: %s%s, data: %s',
+                self.api_url, self.config['url']['login'], req_data
             )
             request = urllib.request.Request(
                 self.api_url + self.config['url']['login'], req_data.encode('utf-8')
@@ -69,11 +70,11 @@ class MyShowsRu(object):
             else:
                 sys.stderr.write('Login error!\n')
             logging.debug('HTTP error #%s: %s\n', ex.code, ex.read())
-            exit(1)
+            sys.exit(1)
         except urllib.error.URLError as ex:
             sys.stderr.write('Login error!\n')
             logging.debug('URLError - %s\n', ex.reason)
-            exit(1)
+            sys.exit(1)
 
         self.logged_ = True
 
@@ -127,44 +128,44 @@ class MyShowsRu(object):
         re_m = re.match(r'^(.*\D)(\d{1,2}){0,1}$', alias)
         if not re_m:
             print('Bad format for list - "{0}"'.format(alias))
-        else:
-            season = -1
-            if re_m.lastindex == 2:
-                season = int(re_m.group(2))
-            show_id = self.id_by_title(
-                self.title_by_alias(re_m.group(1), no_exit=True)
-            )
-            epis = self.load_episodes(show_id)
-            episodes = epis['episodes']
-            list_map = {}
-            for epi_id in episodes:
-                next_episode = episodes[epi_id]
-                if season == -1 or next_episode['seasonNumber'] == season:
-                    list_map[
-                        next_episode['seasonNumber'] * 1000 +
-                        next_episode['episodeNumber']
-                    ] = next_episode
 
-            watched = self.load_watched(show_id)
-            current_season = -1
-            for epi_num in sorted(list_map.keys()):
-                next_episode = list_map[epi_num]
-                next_season = next_episode['seasonNumber']
-                if current_season != next_season:
-                    current_season = next_season
-                    print('{0} Season {1}:'.format(
-                        tr_out(epis['title']), current_season
-                    ))
-                comment = ''
-                epi_id = str(next_episode['id'])
-                if epi_id in watched:
-                    comment = 'watched ' + watched[epi_id]['watchDate']
-                print('  "{0}" (s{1:02d}e{2:02d}) {3}'.format(
-                    tr_out(next_episode['title']),
-                    next_episode['seasonNumber'],
-                    next_episode['episodeNumber'],
-                    comment
+        season = -1
+        if re_m.lastindex == 2:
+            season = int(re_m.group(2))
+        show_id = self.id_by_title(
+            self.title_by_alias(re_m.group(1), no_exit=True)
+        )
+        epis = self.load_episodes(show_id)
+        episodes = epis['episodes']
+        list_map = {}
+        for epi_id in episodes:
+            next_episode = episodes[epi_id]
+            if season in [-1, next_episode['seasonNumber']]:
+                list_map[
+                    next_episode['seasonNumber'] * 1000 +
+                    next_episode['episodeNumber']
+                ] = next_episode
+
+        watched = self.load_watched(show_id)
+        current_season = -1
+        for epi_num in sorted(list_map.keys()):
+            next_episode = list_map[epi_num]
+            next_season = next_episode['seasonNumber']
+            if current_season != next_season:
+                current_season = next_season
+                print('{0} Season {1}:'.format(
+                    tr_out(epis['title']), current_season
                 ))
+            comment = ''
+            epi_id = str(next_episode['id'])
+            if epi_id in watched:
+                comment = 'watched ' + watched[epi_id]['watchDate']
+            print('  "{0}" (s{1:02d}e{2:02d}) {3}'.format(
+                tr_out(next_episode['title']),
+                next_episode['seasonNumber'],
+                next_episode['episodeNumber'],
+                comment
+            ))
 
     def list_shows(self, alias):
         """ list user shows """
@@ -177,17 +178,17 @@ class MyShowsRu(object):
         """ return show id by alias """
         logging.debug('title_by_alias(%s)', query)
         alias = query.lower()
-        if alias not in self.config['alias']:
-            logging.debug('Unknown alias - "%s"', alias)
-            if no_exit:
-                print('Cannot find alias "{0}", will try it as title!'.format(query))
-                return query
-            else:
-                print('Unknown alias - {0}'.format(query))
-                exit(1)
-        else:
+        if alias in self.config['alias']:
             logging.debug('title_by_alias(%s) = %s', query, self.config['alias'][alias])
             return self.config['alias'][alias]
+
+        logging.debug('Unknown alias - "%s"', alias)
+        if no_exit:
+            print('Cannot find alias "{0}", will try it as title!'.format(query))
+            return query
+
+        print('Unknown alias - {0}'.format(query))
+        sys.exit(1)
 
     def alias_by_title(self, title):
         """ return show alias by title """
@@ -212,7 +213,7 @@ class MyShowsRu(object):
                 return show_id
 
         print('Unknown title - {0}'.format(title))
-        exit(1)
+        sys.exit(1)
 
     def load_episodes(self, show_id):
         """ load episode data by show id """
@@ -309,7 +310,7 @@ class MyShowsRu(object):
             date_from = date_to + datetime.timedelta(days=-prev_month.day)
         else:
             print('Unknown alias - {0}'.format(alias))
-            exit(1)
+            sys.exit(1)
 
         self.load_shows()
         print()
@@ -336,7 +337,7 @@ class MyShowsRu(object):
                     continue
                 dtv = [int(s) for s in re_m.group(3, 2, 1)]
                 epi_date = datetime.date(dtv[0], dtv[1], dtv[2])
-                if date_from <= epi_date and epi_date <= date_to:
+                if date_from <= epi_date <= date_to:
                     if not epis:
                         epis = self.load_episodes(show_id)
                     count += 1
@@ -345,12 +346,12 @@ class MyShowsRu(object):
                         logging.debug('Episodes:')
                         logging.debug(epis)
                         continue
-                    else:
-                        episode = epis['episodes'][epi_id]
-                        date_key = epi_date.toordinal() * 1000\
-                            + episode['seasonNumber'] * 10\
-                            + episode['episodeNumber']
-                        last_map[date_key] = episode
+
+                    episode = epis['episodes'][epi_id]
+                    date_key = epi_date.toordinal() * 1000\
+                        + episode['seasonNumber'] * 10\
+                        + episode['episodeNumber']
+                    last_map[date_key] = episode
 
             for date_key in sorted(last_map.keys()):
                 episode = last_map[date_key]
@@ -639,11 +640,13 @@ def main():
     elif 'search_alias' in cmd_args:
         myshows.show_search_result(cmd_args.search_alias)
     elif 'status_alias' in cmd_args:
-        myshows.set_show_status(cmd_args.status_alias, cmd_args.status_value, cmd_args.accurate)
+        myshows.set_show_status(
+            cmd_args.status_alias, cmd_args.status_value, cmd_args.accurate
+        )
     else:
         parser.print_usage()
 
-    exit(0)
+    sys.exit(0)
 
 
 if __name__ == "__main__":
