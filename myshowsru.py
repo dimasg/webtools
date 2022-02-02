@@ -527,8 +527,9 @@ class MyShowsRu:
         search_result = self.search_show(title)
         for show_id in search_result:
             show = search_result[show_id]
-            if accurate and show['title'] != alias:
-                continue
+            if accurate is not None:
+                if accurate > 0 and show['id'] != accurate or show['title'] != alias:
+                    continue
             url = self.config['url']['status'].format(show['id'], status)
             logging.debug('Set show status: %s%s', self.api_url, url)
             request = urllib.request.Request(self.api_url + url)
@@ -595,9 +596,9 @@ def main():
         choices=['watching', 'later', 'cancelled', 'remove']
     )
     status_parser.add_argument(
-        '--accurate', action='store_const',
-        const=True, default=False,
-        help='Exact name comparsion'
+        '--accurate', action='store', type=int,
+        const=0, default=None, nargs='?',
+        help='Exact name comparsion or set show id'
     )
 
     parser.add_argument(
