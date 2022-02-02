@@ -25,9 +25,9 @@ def tr_out(from_str):
 class MyShowsRu:
     """ work with api.myshows.ru """
     def __init__(self, config_name_name):
-        cfg_file = open(config_name_name)
-        self.config = json.load(cfg_file)
-        logging.debug('Parsed config file %s result: %s', config_name_name, self.config)
+        with open(config_name_name, mode='r', encoding='utf8') as cfg_file:
+            self.config = json.load(cfg_file)
+            logging.debug('Parsed config file %s result: %s', config_name_name, self.config)
 
         self.cookie_jar = http.cookiejar.CookieJar()
         self.opener = urllib.request.build_opener(
