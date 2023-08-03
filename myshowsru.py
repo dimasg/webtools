@@ -116,7 +116,10 @@ class MyShowsRu:
                 tr_out(next_show['title']),
                 # next_show['ruTitle'],
                 next_show['watchedEpisodes'], next_show['totalEpisodes'],
-                100 * next_show['watchedEpisodes'] / next_show['totalEpisodes'],
+                100 * (
+                    next_show['watchedEpisodes'] / next_show['totalEpisodes']
+                        if next_show['totalEpisodes'] > 0 else 0
+                ),
                 next_show['rating'],
                 next_show['watchStatus'][0],
                 alias
