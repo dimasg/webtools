@@ -528,6 +528,11 @@ class MyShowsRu:
         title = self.title_by_alias(alias, no_exit=True)
 
         search_result = self.search_show(title)
+
+        if len(search_result) > 1 and accurate is None:
+            print('Search returned more than one show, use --accurate or --fuzzy!')
+            sys.exit(1)
+
         for show_id in search_result:
             show = search_result[show_id]
             if accurate is not None:
@@ -598,10 +603,16 @@ def main():
         'status_value', action='store', help='show status',
         choices=['watching', 'later', 'cancelled', 'remove']
     )
-    status_parser.add_argument(
+    status_group = status_parser.add_mutually_exclusive_group(required=False)
+    status_group.add_argument(
         '--accurate', action='store', type=int,
         const=0, default=None, nargs='?',
         help='Exact name comparsion or set show id'
+    )
+    status_group.add_argument(
+        '--fuzzy', action='store_const',
+        const=True, default=False,
+        help='Fuzzy search by name'
     )
 
     parser.add_argument(
@@ -645,7 +656,8 @@ def main():
         myshows.show_search_result(cmd_args.search_alias)
     elif 'status_alias' in cmd_args:
         myshows.set_show_status(
-            cmd_args.status_alias, cmd_args.status_value, cmd_args.accurate
+            cmd_args.status_alias, cmd_args.status_value,
+            cmd_args.accurate if not cmd_args.fuzzy else -1
         )
     else:
         parser.print_usage()
