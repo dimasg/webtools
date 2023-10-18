@@ -130,7 +130,7 @@ class MyShowsRu:
         """ list user show by alias """
         re_m = re.match(r'^(.*\D)(\d{1,2}){0,1}$', alias)
         if not re_m:
-            print('Bad format for list - "{0}"'.format(alias))
+            print(f'Bad format for list - "{alias}"')
 
         season = -1
         if re_m.lastindex == 2:
@@ -156,9 +156,7 @@ class MyShowsRu:
             next_season = next_episode['seasonNumber']
             if current_season != next_season:
                 current_season = next_season
-                print('{0} Season {1}:'.format(
-                    tr_out(epis['title']), current_season
-                ))
+                print(f"{tr_out(epis['title'])} Season {current_season}:")
             comment = ''
             epi_id = str(next_episode['id'])
             if epi_id in watched:
@@ -187,10 +185,10 @@ class MyShowsRu:
 
         logging.debug('Unknown alias - "%s"', alias)
         if no_exit:
-            print('Cannot find alias "{0}", will try it as title!'.format(query))
+            print(f'Cannot find alias "{query}", will try it as title!')
             return query
 
-        print('Unknown alias - {0}'.format(query))
+        print(f'Unknown alias - {query}')
         sys.exit(1)
 
     def alias_by_title(self, title):
@@ -215,7 +213,7 @@ class MyShowsRu:
                 logging.debug('Found id_by_title(%s) = %s', title, show_id)
                 return show_id
 
-        print('Unknown title - {0}'.format(title))
+        print(f'Unknown title - {title}')
         sys.exit(1)
 
     def load_episodes(self, show_id):
@@ -290,7 +288,7 @@ class MyShowsRu:
         episode_id = self.get_last_watched(show_id)
         print()
         if episode_id is None:
-            print('{0} is unwatched'.format(tr_out(epis['title'])))
+            print(f"{tr_out(epis['title'])} is unwatched")
         else:
             episode = epis['episodes'][episode_id]
             print('Last for {0} is s{1:02d}e{2:02d} ("{3}") at {4}'.format(
@@ -312,7 +310,7 @@ class MyShowsRu:
             prev_month = date_to.replace(day=1) + datetime.timedelta(days=-1)
             date_from = date_to + datetime.timedelta(days=-prev_month.day)
         else:
-            print('Unknown alias - {0}'.format(alias))
+            print(f'Unknown alias - {alias}')
             sys.exit(1)
 
         self.load_shows()
@@ -335,8 +333,7 @@ class MyShowsRu:
                 next_episode = watched[epi_id]
                 re_m = re_c.match(next_episode['watchDate'])
                 if not re_m:
-                    print('Warning: unknown date format - {0}'.format(
-                        next_episode['watchDate']))
+                    print(f"Warning: unknown date format - {next_episode['watchDate']}")
                     continue
                 dtv = [int(s) for s in re_m.group(3, 2, 1)]
                 epi_date = datetime.date(dtv[0], dtv[1], dtv[2])
@@ -345,7 +342,7 @@ class MyShowsRu:
                         epis = self.load_episodes(show_id)
                     count += 1
                     if epi_id not in epis['episodes']:
-                        print('Episode not found: {0}'.format(epi_id))
+                        print(f'Episode not found: {epi_id}')
                         logging.debug('Episodes:')
                         logging.debug(epis)
                         continue
@@ -365,7 +362,7 @@ class MyShowsRu:
                     watched[str(episode['id'])]['watchDate']
                 ))
         print()
-        print('Total count: {0}'.format(count))
+        print(f'Total count: {count}')
         print()
 
     def show_last_watched(self, query):
@@ -424,7 +421,7 @@ class MyShowsRu:
         epis = self.load_episodes(show_id)
         episode_id = self.get_first_unwatched(show_id)
         if episode_id is None:
-            print("\nCannot find first watch for {0}\n".format(tr_out(epis['title'])))
+            print(f"\nCannot find first watch for {tr_out(epis['title'])}\n")
         else:
             episode = epis['episodes'][episode_id]
             print('\nFirst watch for {0} is s{1:02d}e{2:02d} ("{3}")\n'.format(
@@ -437,7 +434,7 @@ class MyShowsRu:
         """ set epi episode as watched """
         re_m = re.match(r's(\d{1,2})e(\d{1,2})', epi.lower())
         if not re_m:
-            print('Bad format for check - "{0}"'.format(epi))
+            print(f'Bad format for check - "{epi}"')
         else:
             season = int(re_m.group(1))
             episode = int(re_m.group(2))
