@@ -508,6 +508,10 @@ class MyShowsRu:
         """ show search result """
         search_result = self.search_show(query)
         print()
+        if len(search_result) == 0:
+            print ("Nothing!\n")
+            sys.exit(1)
+
         for show_id in search_result:
             show = search_result[show_id]
             print(f"\"{tr_out(show['title'])}\", started: {show['started']} (id={show_id})")
