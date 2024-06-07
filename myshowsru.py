@@ -314,12 +314,7 @@ class MyShowsRu:
             sys.exit(1)
 
         self.load_shows()
-        print()
-        print('Watched from {0} to {1}'.format(
-            date_from.strftime('%Y-%m-%d'),
-            date_to.strftime('%Y-%m-%d')
-        ))
-        print()
+        print(f"\nWatched from {date_from.strftime('%Y-%m-%d')} to {date_to.strftime('%Y-%m-%d')}\n")
         re_c = re.compile(r'(\d{1,2})\.(\d{1,2})\.(\d{4})')
         count = 0
         for show_id in self.shows_data:
@@ -515,9 +510,7 @@ class MyShowsRu:
         print()
         for show_id in search_result:
             show = search_result[show_id]
-            print('"{1}", started: {2} (id={0})'.format(
-                show_id, tr_out(show['title']), show['started']
-            ))
+            print(f"\"{tr_out(show['title'])}\", started: {show['started']} (id={show_id})")
         print()
 
     def set_show_status(self, alias, status, accurate):
@@ -539,10 +532,7 @@ class MyShowsRu:
             logging.debug('Set show status: %s%s', self.api_url, url)
             request = urllib.request.Request(self.api_url + url)
             self.opener.open(request)
-            print('Show "{0}" status set to {1}'.format(
-                tr_out(show['title']), status
-            ))
-            print()
+            print(f'Show "{tr_out(show["title"])}" status set to {status}\n')
 
 
 def main():
